@@ -1,0 +1,216 @@
+---
+title: "Oppgave: Protein Analyse"
+---
+
+## Introduksjon
+
+Dette er ett av tre arbeidskrav fra biologilabben i faget IDR4000-1 24H Kvantitativ metode og statistikk. Vi skulle plukke ut en oppgave som skulle presenteres i mappeeksamen, jeg valgte "protein analyse" Dette var en gruppeoppgave jeg har rekonstruert fra den originale elab rapporten. Innholdet er det samme, men den har blitt omstrukturert, utvidet og presentert på en mer ryddig måte.
+
+## Innledning
+
+Proteinanalyse av muskelprøver ved hjelp av Western blot er en viktig metode for å undersøke molekylære endringer i skjelettmuskulatur som respons på trening. Dette forsøket fokuserer på å analysere uttrykket og fosforyleringen av proteinet p70 S6 kinase (p70S6K) fra muskelbiopsier tatt fra venstre og høyre vastus lateralis hos en forsøksperson. Høyre bein gjennomgikk en moderat til hard treningsøkt med fokus på kneekstensjon en time før prøvetaking, mens venstre bein forble utrent. Forsøksdeltageren har trent styrke systematisk i flere år.
+
+p70S6K1 er et av de best karakteriserte nedstrømsmålene for mTORC1, en sentral regulator av cellevekst og proteinsyntese. Når mTORC1 aktiveres, fosforylerer den p70S6K1, noe som bidrar til å stimulere proteinsyntese, og som en konsekvens muskelhypertrofi[@NeumannViollet]. Ved å sammenligne fosforyleringsnivåer av p70S6K mellom trent og utrent muskel, søker denne oppgaven å belyse de akutte molekylære responsene på en enkelt treningsøkt i menneskelig skjelettmuskulatur. Gjennom bruk av Western blot-teknikk, vil denne analysen gi innsikt i hvordan akutt trening påvirker signalveier knyttet til muskelvekst og adaptasjon.
+
+## Metode
+
+### Prøvepreparering
+
+Muskelbiopsier ble tatt fra venstre (TSL) og høyre (TSR) vastus lateralis hos forsøkspersonen TS. Høyre bein hadde gjennomgått en moderat til hard treningsøkt med fokus på kneekstensjon en time før prøvetaking, mens venstre bein forble utrent. Vekten på ferskprøvene ble målt og registrert som følger:
+
+TSL1: 22,4 mg\
+TSL2: 20,5 mg\
+TSR1: 21,4 mg\
+TSR2: 13,1 mg
+
+### Protokollene
+
+Alle protokoller fikk vi utdelt gjennom canvas.
+
+#### General purpose muscle tissue homogenization protocol
+
+Prøvene ble homogenisert i en lysisbuffer i henhold til "General purpose muscle tissue homogenization protocol" (versjon 2019-11-12).
+
+Homogeniseringsprotokoll
+
+Prøvene ble preparert ved å dissekere bort bindevev og blod.
+Protease/fosfatase-hemmere ble tilsatt den iskalde lysisbufferen (10 μl/ml).
+Prøvene ble holdt på tørris eller kjøleblokk inntil tilsetning av iskald lysisbuffer.
+Vevsprøvene ble raskt homogenisert for hånd ved hjelp av en plastpistill til det ikke var synlige biter igjen.
+Prøvene ble holdt på is og rotert i 20 minutter.
+Prøvene ble sentrifugert ved 10 000 g i 10 minutter ved 4°C.
+Supernatanten ble forsiktig overført til et nytt rør uten å forstyrre pelleten.
+Prøven ble alikvotet for proteinkonsentrasjonsbestemmelse (1:10 fortynning, 4 μl til 36 μl ddH2O).
+
+#### Proteinkonsentrasjonsbestemmelse ved Bradford-assay
+
+Bradford-assay ble brukt for å måle proteinkonsentrasjonen. To separate tester ble utført. Vi la opp brettet for test 1 slik.
+
+```{r}
+library(knitr)
+
+bradford_plate <- matrix(
+  c(
+    "Std a", "Std a", "Std a", "Std I", "Std I", "Std I", "", "", "", "", "", "",
+    "Std b", "Std b", "Std b", "TSL 1", "TSL 1", "", "", "", "", "", "", "",
+    "Std c", "Std c", "Std c", "TSL 2", "TSL 2", "", "", "", "", "", "", "",
+    "Std d", "Std d", "Std d", "TSR 1", "TSR 1", "", "", "", "", "", "", "",
+    "Std e", "Std e", "Std e", "TSR 2", "TSR 2", "", "", "", "", "", "", "",
+    "Std f", "Std f", "Std f", "", "", "", "", "", "", "", "", "",
+    "Std g", "Std g", "Std g", "", "", "", "", "", "", "", "", "",
+    "Std h", "Std h", "Std h", "", "", "", "", "", "", "", "", ""
+  ),
+  nrow = 8, byrow = TRUE
+)
+
+rownames(bradford_plate) <- LETTERS[1:8]
+colnames(bradford_plate) <- 1:12
+
+kable(bradford_plate, caption = "Bradford Assay Plate Oppsett")
+```
+
+(Når vi testet konsentrasjonen senere i test 2 laget vi nok slik at vi fikk triplikat av prøvene,lagt i B6, C6, D6 og E6)
+
+#### Western Blot
+
+Daniel Hammarström
+Determine protein abundance by immunoblotting
+System: Bio-Rad Criterion
+
+**Prøvepreparering**
+
+Prøvene ble fortynnet til en sluttkonsentrasjon på 0,24 μg/μl i Laemmli-buffer. Følgende volumer ble brukt for hver prøve:
+
+TSR1 (orginal konsentrasjon: 0,55 μg/μl): 87,3 μl prøve, 62,7 μl dH2O, 50 μl samplebuffer\
+TSR2 (orginal konsentrasjon: 0,32 μg/μl): 150,0 μl prøve, 0,0 μl dH2O, 50 μl samplebuffer\
+TSL1 (orginal konsentrasjon: 0,33 μg/μl): 145,5 μl prøve, 4,5 μl dH2O, 50 μl samplebuffer\
+TSL2 (orginal konsentrasjon: 0,41 μg/μl): 117,1 μl prøve, 32,9 μl dH2O, 50 μl samplebuffer
+
+Prøvene ble lastet opp i følgende rekkefølge
+
+```{r}
+library(knitr)
+
+prover <- c("Stige", "LØ R", "TS R", "TS L", "Stiger", 
+            "Stige", "LØ R", "TS R", "TS L", "Stige")
+
+tabell <- matrix(prover, nrow = 1, byrow = TRUE)
+colnames(tabell) <- 1:10
+
+kable(tabell, caption = "Oppsett av prøver for Western blot")
+```
+
+LØ R er en prøve fra en annen gruppe som ble kjørt samtidig med vår. Det ble observert en liten luftboble i brønn 3 og 5, som ble forsøkt fjernet ved hjelp av en pasteurpipette.
+
+Prøvene ble varmet opp til 70°C i 10 minutter før de ble lastet på gelen (ikke 95°C i 5 min som beskrevet i protokollen).
+
+**Gelektroforese**
+
+Elektroforese ble utført ved konstant spenning på 300 volt. Prosessen ble stanset etter 23 minutter (isteden for 30 min som beskrevet i protokollen) på anbefaling fra læreren.
+
+**Protein transfer (blotting)**
+
+Vi forberedet en "sandwich" med membranene ved følgende prossedyre: La svampene i dH2O og fjernet bobler. La membranene (klippet i øvre venstre hjørne for å markere side) i metanol for å aktivere (ristet i 5-10 minutter) Plasserte sandwich i monteringsbrettet – svart side ned. Klemte ut dH2O fra svampene og la dem i transferbuffer – fjernet alle bobler. Fuktet 2 filterpapir i buffer, la dem på toppen av gelen og klemte dem forsiktig sammen. Plasserte filterpapirene med gelen på toppen av svampen. Fjernet bobler. La membranen på toppen av gelen. sørget for at det ble lagt i riktig retning, membranene var merket i øvre venstre hjørne. Fjernet bobler. Plasserte den siste svampen på toppen og lukket sandwichen.
+
+Blotting ble gjennomført ved 100 V og 500 mA i 30 minutter (isteden for 300 mA over 3 timer som beskrevet i protokollen).
+
+**Membranbehandling**
+
+Membranen ble skylt raskt i dH2O. MemCode Sensitizer ble tilsatt og plassert på shaker i 2 minutter. MemCode Reversible stain ble tilsatt og plassert på shaker i 1 minutt. Membranen ble avfarget med MemCode destain-løsning. Metanol/destain-løsning ble tilsatt og plassert på rister i 5 minutter. Membranen ble skylt med dH2O 4 ganger. Membranen ble avbildet. Membranen ble deretter behandlet med Eraser-løsning på shaker i 10 minutter. Membranen ble skylt i dH2O 4 ganger og oppbevart i TBS inntil kutting. Mebranen ble kuttet i 2 deler(en del til hver gruppe).
+
+Bilde av membranen
+
+```{r, out.width="70%", fig.align="center"}
+knitr::include_graphics("ressurser/proteinanalyse/membran_blot.jpg")
+```
+
+**Blokkering og antistoffinkubering**
+
+Membranen ble blokkert med 5% melkeløsning i TBS i 1 time ved romtemperatur (ikke 2.5% melkeløsning som protokollen sa). Primære antistoffer ble inkubert over natten i 1% melkeløsning ved 4°C (ikke 5% melkeløsning som protokollen sa).
+
+Lot-nummeret for antistoffene er inkludert for å sikre sporbarhet og reproduserbarhet av resultatene. I tilfelle uventede resultater eller problemer med antistoffene, kan lot-nummeret også brukes til å kontakte produsenten for ytterligere informasjon eller feilsøking:
+
+10 μg P-p70 s6 kinase (lot 22, produktnr 9206s)
+10 μg P-70 s6 kinase (lot 20, produktnr 9202s)
+
+***Dette var så langt jeg var med i protokollen. Læreren ordnet resten uten oss. Dette er resten av protokollen.***
+
+Membranen ble vasket med TBS-T 2x1 minutt + 3x5 minutter. Sekundære antistoffer ble inkubert i 2,5% melk med TBS-T i 1 time ved romtemperatur. Membranen ble vasket med TBS 4x5 minutter.
+
+**Deteksjon**
+
+ECL (enhanced chemiluminescence) ble brukt for å visualisere proteinbåndene: Arbeidssløsning ble blandet (Thermo super signal). Membranen ble inkubert i 5 minutter ved romtemperatur. Membranen ble dekket med klar plastfolie. Bilder ble tatt med Gel Doc-systemet.
+
+**Stripping og reinkubering**
+
+Membranen ble vasket 7 ganger med dH2O. Membranen ble vasket 3x3 minutter i TBS. Membranen ble strippet med Restore Plus Western Blot Stripping Buffer i 30 minutter ved 37°C. Membranen ble vasket 5x1 minutt i dH2O. Membranen ble vasket 3x3 minutter i TBS.
+
+**Avsluttende kommentar**
+
+Alle trinn i prosedyren ble utført i henhold til standard laboratorieprotokoller, med unntak av de spesifikt nevnte modifikasjonene. Eventuelle avvik fra standardprotokollene ble notert og tatt hensyn til i den påfølgende dataanalysen og tolkningen av resultatene.
+
+## Resultater og diskusjon
+
+### Proteinkonsentrasjonsmålinger
+
+Bradford-assay ble brukt for å måle proteinkonsentrasjonen i prøvene. To separate tester ble utført, og resultatene var som følger:
+
+**Test 1 (brukt for Western blot):**
+
+TSL1: 329,3903 μg/μl (SD = 26,9992, CV = 8,1967%)\
+TSL2: 405,5337 μg/μl (SD = 2,2046, CV = 0,5436%)\
+TSR1: 554,6679 μg/μl (SD = 2,3571, CV = 0,4250%)\
+TSR2: 323,2049 μg/μl (SD = 6,4506, CV = 1,9958%)
+
+**Test 2 (ekstra test):**
+
+TSL1: 576,3638 μg/μl (SD = 12,0474, CV = 2,09%)\
+TSL2: 603,6164 μg/μl (SD = 76,1227, CV = 12,61%)\
+TSR1: 587,4225 μg/μl (SD = 56,0197, CV = 9,53%)\
+TSR2: 352,2895 μg/μl (SD = 28,4337, CV = 8,07%)
+
+Som vi ser, er det betydelig variasjon mellom prøvene våre, noe som kan skyldes flere faktorer i vår eksperimentelle prosedyre. Ujevn blanding eller fortynning av prøvene under forberedelsen, pipetteringsfeil og dårlig blanding av reagenser er alle potensielle kilder til disse avvikene. I tillegg kan forskjellen i antall replikater mellom Test 1 (to prøver av hver) og Test 2 (tre prøver av hver) ha påvirket resultatene våre. Flere replikater i Test 2 gir generelt en mer nøyaktig utregning og et bedre bilde av variasjonen mellom prøvene, noe som reflekteres i de høyere standardavvikene (SD) og variasjonskoeffisientene (CV) vi observerer. Samtidig øker flere prøver risikoen for feil i prosessen, da hvert ekstra replikat innebærer ytterligere pipettering, fortynning og håndtering.
+
+Det er verdt å merke seg at selv med flere replikater i Test 2, ser vi høyere CV-verdier, noe som tyder på større variabilitet i målingene. Dette kan indikere at vi hadde utfordringer med konsistens i prøvehåndteringen, eller at det var mer naturlig variasjon i disse prøvene. Disse observasjonene understreker viktigheten av nøyaktig og konsistent laboratorieteknikk, samt behovet for å optimalisere våre prosedyrer for å redusere variabilitet mellom prøvene. Den eneste grunnen til at vi brukte Test 1 var at vi gikk videre i protokollen, og Test 2 ble utført på et senere tidspunkt når vi hadde litt ekstra tid. De lave CV-verdiene i Test 1 gjorde disse resultatene mest hensiktsmessige å jobbe med, med unntak av "TSL1".
+
+### Western blot-resultater
+
+Prøvene var satt opp i rekkefølgen: LØ R - TS R - TS L
+
+Ukjent hva LØ R sin status er men TS R hadde trent før prøvetagning og TS L hadde ikke trent.
+
+**p-p70**
+
+```{r, out.width="70%", fig.align="center"}
+knitr::include_graphics("ressurser/proteinanalyse/p-p70.jpg")
+```
+
+**t-p70**
+
+```{r, out.width="70%", fig.align="center"}
+knitr::include_graphics("ressurser/proteinanalyse/t-p70.jpg")
+```
+
+Western blot-analysen viste tydelige forskjeller i fosforylering av p70S6K mellom trent og utrent muskel. På p-p70 ser vi at alle tre båndene lyser omtrent like sterkt. Kanskje LØ R lyser hakket sterkere. Dette indikerer at mengden av fosforylert p70 S6 kinase er relativt lik i alle tre prøvene. Dette kan tyde på at aktivitetsnivået av p70 S6 kinase er sammenlignbart mellom LØ R, TS R (det trente beinet) og TS L (det utrente beinet).
+
+På t-p70 ser vi et mer komplekst mønster. De tre båndene i midten som lyser sterkest, representerer sannsynligvis hovedformen av p70 S6 kinase. De svakere båndene over og under kan være isoformer eller modifiserte versjoner av proteinet. At TSR-prøven (midten) viser sterkere intensitet i alle tre båndene, sammenlignet med de andre prøvene, kan tyde på at det totale uttrykket av p70 S6 kinase er høyere i det trente beinet.
+
+### Fysiologisk betydning
+
+Økningen av p70S6K i den trente muskelen er i samsvar med tidligere studier som har vist at akutt trening aktiverer mTOR-signalveien, hvor p70S6K er en nøkkelkomponent[@NeumannViollet]. Fosforylering av p70S6K er kjent for å stimulere proteinsyntese og er en viktig mekanisme i treningsindusert muskelhypertrofi[@NeumannViollet]. Jeg stusser da over hvorfor vi ikke ser en visuell forskjell på bildet av fosforylert p70S6K.
+
+Tidspunktet for prøvetaking, som var ca. en time etter trening, kan ha påvirket resultatene betydelig. @Jacko viser at fosforylering av p70S6K kan vedvare i mer enn 8 timer etter trening. Dette kan forklare hvorfor vi observerte lignende nivåer av fosforylert p70S6K i alle prøvene, inkludert den utrente muskelen. Det er mulig at forskjeller i fosforylering ville vært mer synlige på andre tidspunkter etter trening.
+
+I tillegg, siden forskningsdeltageren (TS) er vant til trening, kan dette ha påvirket responsen. @Jacko viser at gjentatt motstandstrening over tid fører til en desensitivisering av mTOR-relatert signalering i skjelettmuskulaturen. Dette kan forklare hvorfor vi ikke så en markant forskjell mellom trent og utrent muskel i vårt forsøk. Artikkelen påpeker også at etter en periode med treningsavbrudd (10 dager) økte fosforyleringen av p70S6K igjen, noe som tyder på en re-sensitivisering av signalveiene[@Jacko]. Dette understreker viktigheten av å vurdere treningshistorikk og tidspunkt for prøvetaking når man tolker resultater fra slike studier.
+
+Det er verdt å merke seg at vi observerte noen utfordringer i vår Western blot-prosedyre, inkludert luftbobler i noen brønner og variasjon i proteinkonsentrasjonsmålingene. Disse faktorene kan ha påvirket kvaliteten på våre blot og bør tas i betraktning ved tolkning av resultatene. Vår uerfarenhet gjør at vi trenger mere øvelse i utføring av slike protokoller og at feilene mest sannsynlig skyldes menneskelige faktorer og unøyaktighet. Det er ikke usannsynlig at avik har forekommet som vi ikke har registrert har forekommet og dermed ikke har blitt med i rapporten.
+
+## Konklusjon
+
+Vårt forsøk viser at en enkelt treningsøkt med kneekstensjon påvirker uttrykket av p70S6K i menneskelig skjelettmuskulatur, med en observert økning i totalt p70S6K-uttrykk i den trente muskelen. Dette samsvarer med tidligere forskning om treningsindusert aktivering av mTOR-signalveien.
+
+Imidlertid fant vi ingen tydelig forskjell i fosforylering av p70S6K mellom trent og utrent muskel, noe som kan skyldes faktorer som prøvetakingstidspunkt og forskningsdeltakerens treningshistorie. Som @Jacko påpeker, kan langvarig trening føre til desensitivisering av mTOR-relatert signalering, hvilket kan forklare våre observasjoner.
+
+Våre funn understreker viktigheten av å vurdere flere faktorer i tolkningen av slike forsøk, inkludert prøvetakingstidspunkt, treningshistorie og metodologiske utfordringer. Forsøket bidrar til vår forståelse av akutte molekylære responser på trening, men fremhever også kompleksiteten i disse prosessene.
+
+Jeg erkjenner at min begrensede erfaring med Western blot-teknikken kan ha påvirket resultatenes kvalitet, noe som understreker behovet for grundigere opplæring i avanserte laboratorieteknikker.

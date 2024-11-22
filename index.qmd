@@ -1,0 +1,39 @@
+---
+title: "Mappeeksamen"
+author: "Kandidatnr: 507"
+date: "2024-11-22"
+format:
+  pdf:
+    include-in-header: 
+      text: |
+        \usepackage{pdfpages}
+    include-before-body:
+      text: |
+        \includepdf[pages=-]{ressurser/Forside/Forside.pdf}
+        \setcounter{page}{1}
+editor_options: 
+  chunk_output_type: console
+---
+
+## Forord
+
+Denne mappeeksamenen representerer mitt arbeid i faget IDR4000 Kvantitativ metode og statistikk, en del av masterprogrammet i treningsfysiologi. Oppgavene demonstrerer anvendelsen av kvantitative metoder og statistiske analyser innen treningsfysiologi, med fokus på reproduserbarhet i vitenskapelig arbeid.Ikke alle oppgavene klarte jeg å løse, men jeg håper at denne mappeeksamenen likevel demonstrerer min forståelse av kvantitative metoder og statistikk, samt min evne til å anvende disse verktøyene på relevante problemstillinger innen treningsfysiologi.
+
+Gjennom arbeidet med denne mappeeksamenen har jeg tilegnet meg verdifull kunnskap, særlig innen koding som var et helt nytt felt for meg. Selv om jeg støtte på noen tekniske utfordringer underveis som jeg ikke klarte å løse fullt ut, håper jeg at helheten i arbeidet demonstrerer min faglige utvikling og forståelse for kvantitative metoder i treningsfysiologi.
+
+For å sikre full transparens og reproduserbarhet, er all kode, dataanalyse og resultater gjort tilgjengelig via et GitHub-repository. Dette repositoriet inneholder alle R-skript, datasett og supplerende materiale brukt i oppgavene.
+
+GitHub-repositoriet for dette prosjektet kan finnes på:
+
+[Mitt GitHub-repositori](https://github.com/Steien/Mappeeksamen_Trond.git)
+
+```{r}
+library(wordcountaddin)
+
+# Liste over  qmd-filer
+filer <- c("01_oppgave.qmd", "02_oppgave.qmd", "03_oppgave.qmd", "04_oppgave.qmd", "05_oppgave.qmd", "Filosofihistorie.qmd", "Protein_analyse.qmd")
+
+# Teller ord i hver fil og summerer
+total_ord <- sum(sapply(filer, wordcountaddin::word_count))
+
+```

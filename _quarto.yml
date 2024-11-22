@@ -1,0 +1,39 @@
+project:
+  type: book
+
+book:
+  chapters:
+    - index.qmd
+    - 01_oppgave.qmd
+    - 02_oppgave.qmd
+    - 03_oppgave.qmd
+    - 04_oppgave.qmd
+    - 05_oppgave.qmd
+    - Filosofihistorie.qmd
+    - Protein_analyse.qmd
+    - ressurser/referanser.qmd
+
+bibliography: ressurser/referanser.bib
+csl: ressurser/sitat_stil.csl
+
+format:
+  pdf:
+    documentclass: scrreprt
+    toc: true
+    toc-title: Innholdsfortegnelse
+    toc-depth: 2
+    number-sections: true
+    colorlinks: true
+    include-in-header: 
+      text: |
+        \usepackage{pdfpages}
+    include-before-body:
+      text: |
+        \includepdf[pages=-]{ressurser/Forside/Forside.pdf}
+        \setcounter{page}{1}
+    filters:
+      - custom.lua
+    execute:
+      echo: false
+      warning: false
+      message: false

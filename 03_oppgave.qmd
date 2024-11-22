@@ -1,0 +1,397 @@
+---
+title: "Oppgave 3: Reliabilitet og verktøy for reproduserbar vitenskapelig data"
+---
+
+## Introduksjon
+
+Dette er oppgave Oppgave 3: "Reliabilitet og verktøy for reproduserbar vitenskapelig data" i faget IDR4000-1 24H Kvantitativ metode og statistikk for master i treningsfysiologi. Dette var en individuell oppgave jeg har revidert på tilbakemelding fra fagansvarlig.
+
+Vi har fått utdelt noen eksempelkoder som simulere statistikk og utregninger i to utvalg av en populasjon. En med utvalgstørrelse på 8, og en med utvalgstørrelse 40. Først blir utregning fra eksempelkodene presentert også svarer jeg på spørsmålene i oppgaven.
+
+### Utregning av m1 = n8
+
+```{r}
+
+library(tidyverse)
+
+set.seed(1)
+population <- rnorm(1000000, mean = 1.5, sd = 3)
+
+
+samp1 <- data.frame(y = sample(population, 8, replace = FALSE))
+
+samp2 <- data.frame(y = sample(population, 40, replace = FALSE))
+
+
+m1 <- lm(y ~ 1, data = samp1)
+m2 <- lm(y ~ 1, data = samp2)
+
+summary(m1)
+```
+
+### Utregning av m2 = n=40
+
+```{r}
+
+library(tidyverse)
+
+set.seed(1)
+population <- rnorm(1000000, mean = 1.5, sd = 3)
+
+
+samp1 <- data.frame(y = sample(population, 8, replace = FALSE))
+
+samp2 <- data.frame(y = sample(population, 40, replace = FALSE))
+
+
+m1 <- lm(y ~ 1, data = samp1)
+m2 <- lm(y ~ 1, data = samp2)
+
+summary(m2)
+```
+
+## Spørsmål 1
+Forklar estimatet, standardfeil (standard error = SE), t-verdi og p-verdi fra regresjonsmodellene som blir opprettet her (m1 og m2).
+
+### Estimatet
+
+Er gjennomsnittsverdien i utvalget. Ved å ta et utvalg(en del) av populasjonen(Den gruppen vi ønsker å si noe om), ønsker vi å si at gjennomsnittet i utvalget er representativ for populasjonen. Det vi ønsker er at estimatet skal representere populasjonen så likt som mulig. Estimatet blir mer presist (nærmere den sanne verdien i populasjon) når utvalgsstørrelsen øker, gitt at kvaliteten på utvalget er bra. [@Spiegelhalter].
+
+Estimatet er vår beste gjetning på populasjonens sanne gjennomsnitt. I eksemplet er det brukt 8 og 40 som utvalg (utvalget er tilfeldig valgt fra en populasjon på 1000000 i dette tilfellet). For m1 (som har 8 simulerte deltagere) er estimatet 1.84 mens for m2 (som har 40 simulerte deltagere) er det 1.5642 som er nærmere det faktiske populasjons verdien på 1.5.
+
+### Standardfeilen (SE)
+
+Standardfeil er et statistisk mål som forteller oss hvor presist vårt estimat av populasjonsgjennomsnittet er. Det måler hvor mye vi kan forvente at våre estimater varierer fra utvalg til utvalg, og en mindre standardfeil indikerer at våre estimater er mer pålitelige og sannsynligvis nærmere den sanne verdien i populasjonen. Standardfeilen beregnes ved å dele standardavviket på kvadratroten av utvalgsstørrelsen $SE = \frac{SD}{\sqrt{n}}$. Standardfeilen går mot 0 når n vokser, men kan aldri bli nøyaktig 0. Det vil si at estimatet blir stadig mer presist når antall observasjoner vokser. Usikkerheten avtar bare ved kvadratroten av n. Det betyr at for å halvere usikkerheten kreves det en firedobling av antall observasjoner [@Aalen; @Spiegelhalter].
+
+I vårt eksempel, med utvalg på 8 og 40 fra en populasjon på 1000000, vil utvalget på 40 gi en mindre standardfeil enn utvalget på 8, noe som betyr at estimatet basert på 40 observasjoner sannsynligvis er nærmere det sanne populasjonsgjennomsnittet. Når utvalgsstørrelsen øker, blir standardfeilen mindre, noe som indikerer økt presisjon i våre estimater. Ved bruk av standardfeil kan det hjelper oss å vurdere hvor sikre vi kan være på våre statistiske konklusjoner og hvor godt våre data representerer den større populasjonen vi studerer [@Aalen].
+
+For m1 er SE 1.251 og for m2 er SE 0.4774 som er betraktelig lavere en m1 siden populasjonutvalget er høyere.
+
+### t-verdi
+
+Er forholdet mellom estimatet og Standardfeil med formelen $t = \frac{\text{estimat}}{\text{SE}}$. t-verdien Indikerer hvor mange standardfeil estimatet er fra null. En høyere absoluttverdi av t indikerer sterkere bevis mot nullhypotesen, at det ikke er en forskjell. En annen måte å si det på er "hvor langt unna er estimatet fra 0, målt i i antall standard feil" [@Spiegelhalter].
+
+@Spiegelhalter sier også at ved store nok utvalg vil en t-verdi større enn 2 eller mindre enn -2 korrespondere med en en P \< 0.05.
+
+Vi ser at m2 har betraktelig høyere t-verdi som tyder på en mer statistisk signifikant resultat. For m1: $t = \frac{1.84}{1.251} \approx 1.47$ og for m2: $t = \frac{1.5642}{0.4774} \approx 3.276$
+
+### p-verdien
+
+Er et mål på avvik mellom data og nullhypotesen. Vi bruker en statistisk test for å finne p-verdien som er sannsynligheten for å observere en like ekstrem eller mer ekstrem effekt utelukket av tilfeldighet (t-verdi)[@Hulley; @Spiegelhalter].
+
+I følge @Hulley så hvis nullhypotesen er sann, og det virkelig ikke er en forskjell i populasjonen. Så er den eneste måten denne studien vi bruker testen på, kunne finne denne effekten i utvalget på, er ved en tilfeldighet. Hvis denne effekten er liten så kan nullhypotesen forkastes til fordel for dens alternativ $\alpha$, som er dens forutsagte nivå av statistisk signifikans, som oftest er på 0.05.
+
+Et "ikke signifikant" (p-verdi over 0.05) resultat betyr ikke det ikke er noen assosiasjon i befolkningen; det betyr bare at resultatet observert i utvalget er lite sammenlignet med hva som kan bli observert av en tilfeldighet alene [@Hulley].
+
+For m1 er p-verdien 0.185, som er over det vanlige signifikansnivået på 0.05. Dette betyr at vi ikke har tilstrekkelig evidens til å forkaste nullhypotesen basert på dette utvalget. For m2 er p-verdien 0.00221, som er betydelig lavere og under 0.05. Dette indikerer sterk evidens mot (ikke sann) nullhypotesen. Det betyr at det er svært lite sannsynlig at vi ville observere et slikt resultat (eller et mer ekstremt resultat) hvis nullhypotesen var sann. Dette gir oss grunnlag for å forkaste nullhypotesen for m2.
+
+## Spørsmål 2
+Diskuter hva som bidrar til de forskjellige resultatene i de to studiene (m1 og m2).
+
+m2 har et større utvalgsstørrelse (n=40) sammenlignet med m1 (n=8).
+
+Disse resultatene demonstrerer tydelig hvordan en større utvalgsstørrelse fører til mer presise estimater, lavere standardfeil, høyere t-verdier, og lavere p-verdier som beskrevet under spørsmål 1.
+
+Dette øker vår evne til å oppdage reelle effekter (økt statistisk styrke) og reduserer sannsynligheten for type II-feil (falske negativer). Sannsynligheten for type I-feil (falske positiver) forblir konstant på det valgte signifikansnivået (oftest 0,05 eller 5%). Type I-feil skjer når vi ved utregning forkaster en nullhypotese som faktisk er sann i populasjonen. Type II-feil er det som skjer når vi ved utregning ikke forkaster en nullhypotese som faktisk ikke er sann i populasjonen (@Hulley; @Spiegelhalter).
+
+Med andre ord, når vi øker antall deltakere i studien, får vi mer nøyaktige og troverdige funn. Dette gjør det lettere å oppdage virkelige effekter hvis de eksisterer, men endrer ikke sjansen for å feilaktig konkludere at det finnes en effekt når det egentlig ikke gjør det.
+
+Mindre utvalg som m1 er mer utsatt for tilfeldige variasjoner og større utvalg som m2 er mer stabile representasjon av populasjonen.
+
+## Spørsmål 3
+Hvorfor bruker vi det skraverte området i den nedre og øvre halen av t-fordelingen?
+
+Det skraverte området i den nedre og øvre halen av t-fordelingen er nødvendig for å tolke resultatene av en hypotesetest. Dette området representerer de regionene som brukes for å vurdere statistisk signifikans. I praksis beregner vi først en t-verdi basert på våre observerte data. Denne t-verdien sammenlignes deretter med t-fordelingen under nullhypotesen. P-verdien beregnes som sannsynligheten for å observere en t-verdi like ekstrem eller mer ekstrem enn den vi faktisk observerte, gitt at nullhypotesen er sann(@Spiegelhalter).
+
+Det skraverte området i figuren illustrerer denne sannsynligheten visuelt. Hvis vår beregnede p-verdi faller innenfor dette skraverte området, indikerer det at våre observerte data er uvanlige nok til å sette spørsmålstegn ved nullhypotesen. Med andre ord, jo mindre p-verdien er (jo mer av det skraverte området vår observerte t-verdi faller innenfor), desto sterkere bevis har vi mot nullhypotesen. I en to-halet test, som figuren illustrerer, skraverer vi både den øvre og nedre halen. Dette gjør vi fordi vi tester om parameteren er signifikant forskjellig fra nullhypotesen i begge retninger. Summen av arealene i begge haler gir oss den totale p-verdien[@Hulley];Spiegelhalter].
+
+Som nevnt noen ganger allerede vil størrelsen på utvalget påvirke estimatet. Med tanke på figuren vil formen på t-fordelingen og dermed også det skraverte området forandre seg. Større utvalg gir en smalere fordeling, noe som kan føre til lavere p-verdier og potensielt sterkere bevis mot nullhypotesen.
+
+*Mange studier*
+
+Det er simulert 1000 studier og lagret. Dette er en kopi fra oppgaveteksten som trengs for å besvare de neste spørsmålene.
+```{r}
+# Create data frames to store the model estimates
+results_8 <- data.frame(estimate = rep(NA, 1000), 
+                      se = rep(NA, 1000), 
+                      pval = rep(NA, 1000), 
+                      n = 8)  
+
+results_40 <- data.frame(estimate = rep(NA, 1000), 
+                      se = rep(NA, 1000), 
+                      pval = rep(NA, 1000), 
+                      n = 40)
+
+# A for loop used to sample 1000 studies, each iteration (i) will draw a new sample
+# from the population. 
+
+for(i in 1:1000) {
+  
+  # Draw a sample 
+  samp1 <- data.frame(y = sample(population, 8, replace = FALSE))
+  samp2 <- data.frame(y = sample(population, 40, replace = FALSE))
+
+  # Model the data
+  m1 <- lm(y ~ 1, data = samp1)
+  m2 <- lm(y ~ 1, data = samp2)
+  
+  # Extract values from the models
+  results_8[i, 1] <- coef(summary(m1))[1, 1]
+  results_8[i, 2] <- coef(summary(m1))[1, 2]
+  results_8[i, 3] <- coef(summary(m1))[1, 4]
+
+  results_40[i, 1] <- coef(summary(m2))[1, 1]
+  results_40[i, 2] <- coef(summary(m2))[1, 2]
+  results_40[i, 3] <- coef(summary(m2))[1, 4]
+  
+  
+}
+
+
+# Save the results in a combined data frame
+
+results <- bind_rows(results_8, results_40)
+```
+
+## Spørsmål 4
+
+Beregn standardavviket (SD) for variabelen estimate, og gjennomsnittet av variabelen standardfeil (SE) for hver av studiens utvalgsstørrelser (8 og 40). Forklar hvorfor disse tallene er veldig like. Hvordan kan du definere standardfeilen (SE) i lys av disse beregningene?
+
+```{r}
+# Dele opp results dataframen basert på utvalgsstørrelse
+results_8 <- results %>% filter(n == 8)
+results_40 <- results %>% filter(n == 40)
+
+# Beregn standardavvik og gjennomsnitt for hver gruppe
+sd_estimate_8 <- sd(results_8$estimate) 
+mean_se_8 <- mean(results_8$se)
+
+sd_estimate_40 <- sd(results_40$estimate)
+mean_se_40 <- mean(results_40$se)
+
+
+
+### Utvalgsstørrelse 8
+
+#### Standardavvik (SD) for estimatene: `r sd_estimate_8`
+
+#### Gjennomsnittlig Standardfeil (SE): `r mean_se_8`
+
+### Utvalgsstørrelse 40
+
+#### Standardavvik (SD) for estimatene: `r sd_estimate_40`
+
+#### Gjennomsnittlig Standardfeil (SE): `r mean_se_40`
+
+```
+
+  Utvalgsstørrelse 8
+
+  Standardavvik (SD) for estimatene: `r sd_estimate_8`
+
+   Gjennomsnittlig Standardfeil (SE): `r mean_se_8`
+
+  Utvalgsstørrelse 40
+
+  Standardavvik (SD) for estimatene: `r sd_estimate_40`
+
+  Gjennomsnittlig Standardfeil (SE): `r mean_se_40`
+
+Standardavviket for estimatene viser hvor mye estimatene variere fra gjennomsnittet, mens gjennomsnittet av Standardfeil gir oss en indikasjon på hvor mye usikkerhet det er i disse estimatene. Når tallene er like, kan det tyde på at variasjonen i estimatene er konsistent med usikkerheten som er estimert av Standardfeilen, noe som burde være tilfellet i en god statistisk modell[@Spiegelhalter].
+
+Standardfeilen kan defineres som et mål på hvor mye vi forventer at estimatet vil variere fra det sanne populasjongjennomsnittet. Det gir oss en indikasjon på presisjonen til estimatet; jo lavere SE, desto mer presist er estimatet[@Spiegelhalter].
+
+I tillegg er det viktig å merke seg at den gjennomsnittlige standardfeilen er et estimat på spredningen i utvalgsfordelingen. Utvalgsfordelingen representerer alle mulige beregnede gjennomsnitt fra gjentatte utvalg fra populasjonen[@Aalen].
+
+## Spørsmål 5
+Opprett et histogram (Brukt eksempelkode) av p-verdiene fra hver utvalgsstørrelse. Hvordan tolker du disse histogrammene, hva forteller de deg om effekten av utvalgsstørrelse på statistisk styrke?
+
+```{r}
+
+# Example code for copy and paste
+
+# A two facets histogram can be created with ggplot2
+results %>%
+  ggplot(aes(pval)) + 
+  geom_histogram() +
+  facet_wrap(~ n)
+
+```
+
+Histogrammet n=8 viser en spredt fordeling av p-verdiene. Selv om flere av p-verdiene er nært 0.00, har den også mange som er mye høyere. Som tyder på lavere statistisk styrke. De lave p-verdiene kan være tilfeldige og er ikke nødvendigvis pålitlige[@Spiegelhalter].
+
+Histogrammet n=40 viser en veldig konsentrert fordeling av p-verdiene nært 0.00. Dette indikerer at vi har flere signifikante resultater. Dette er fordi større utvalg redusere usikkerheten i estimatene. Dette gir et klarere bilde av hva som faktisk skjer i populasjonen[@Spiegelhalter].
+
+## spørsmål 6
+Beregn antall studier fra hver utvalgsstørrelse som erklærer en statistisk signifikant effekt (spesifiser en terskel for $\alpha$, ditt signifikansnivå).
+
+Standarden for signifikansnivået i statistiske tester 0.05. og er det vi fikk av eksempelkoden.
+
+```{r}
+# Count the proportion of tests below a certain p-value for each 
+results_table <- results %>%
+  filter(pval < 0.05) %>%
+  group_by(n) %>%
+  summarise(sig_results = n()/1000)
+
+# Vis tabellen penere og gjør at jeg kan refere til den i teksten (om jeg skjønte PerplexityAI riktig)
+knitr::kable(results_table, caption = "Andel signifikante resultater")
+
+# hvordan results kan bli refferert til i teksten
+
+##- For \( n = `r results_table$n[1]` \): `r results_table$sig_results[1]`
+##- For \( n = `r results_table$n[2]` \): `r results_table$sig_results[2]`
+
+```
+
+Dette betyr at antall studier som erklærer en statistisk signifikant effekt er (p \< 0.05) for n=8 er 22.7% og for n=40 er det 86.5%. Dette viser tydelig at med større utvalg er det mye mer sannsynlig å oppdage signifikante resultater, noe som bekrefter at større utvalg forbedrer den statistiske styrken
+
+Jeg prøver å senke terskelen for $\alpha$, til 0.01. Siden oppgaven spør etter å spesifisere en terskel for $\alpha$, mitt signifikansnivå.
+
+```{r}
+library(dplyr)
+
+# Tell antall studier med p-verdier under alpha for hver utvalgsstørrelse
+results_table001 <- results %>%
+  filter(pval < 0.01) %>%
+  group_by(n) %>%
+  summarise(sig_results = n()/1000)
+
+# Vis resultatene med knitr
+knitr::kable(results_table001, caption = "Andel signifikante resultater med terskel 0.01")
+```
+
+Nå ble antall studier som erklærer en statistisk signifikant effekt (p \< 0.01) for n=8 til 7.4% og for n=40 er det 66.6%. Dette viser tydelig at med strengere krav til hva som definerer signifikant blir også andelen signifikante resultater mindre. Påstanden fra tidligere om at større utvalg forbedrer den statistiske styrken står fortsatt. Hvorfor en velger strengere signifikant kan være blant annet for å redusere falske posestiver for å være enda sikrere i konklusjonen [@Aalen].
+
+Jeg gjør det igjen med å øke terskelen for $\alpha$ til 0.10
+
+```{r}
+library(dplyr)
+
+# Tell antall studier med p-verdier under alpha for hver utvalgsstørrelse
+results_table002 <- results %>%
+  filter(pval < 0.10) %>%
+  group_by(n) %>%
+  summarise(sig_results = n()/1000)
+
+# Vis resultatene med knitr
+knitr::kable(results_table002, caption = "Andel signifikante resultater med terskel 0.10")
+```
+
+Ikke uventet økte antall studier som erklærer en statistisk signifikant effekt til 37.1% for n=8 og 92.6% for n=40. Det kan være hensiktsmessig å øke signifikansnivået hvis det for eksempel bare skal se om det er en effekt og falske posestiver ikke er farlig for det vi skal se på[@Aalen].
+
+Når man endrer signifikansnivået ($\alpha$) i en statistisk test, oppstår det en avveining mellom type I og type II feil. Senking av $\alpha$ reduserer sannsynligheten for type I-feil (falske positiver), men øker samtidig risikoen for type II-feil (falske negativer). Motsatt vil en økning av $\alpha$ føre til større sannsynlighet for type I-feil, men redusere risikoen for type II-feil. Denne avveiningen er uunngåelig i statistisk testing, og valg av signifikansnivå bør reflektere studiens kontekst, inkludert de relative kostnadene ved å gjøre hver type feil. Tradisjonelt foretrekkes det å minimere type I-feil, noe som forklarer de vanlige signifikansnivåene på 1% eller 5%. I spesielle tilfeller, som ved testing av potensielt farlige bivirkninger, kan det imidlertid være nødvendig å prioritere reduksjon av type II-feil over type I-feil[@Aalen].
+
+## Spørsmål 7
+Ved bruk av pwr pakken, kalkuler styrken av en "one-sample t-test" med en effekt størrelse på 1.5/3, den spesifiserte signifikansnivå og utvalgsstørrelse er 8 og 40. Forklar resultatene ut ifra simuleringen.
+
+```{r}
+library(pwr)
+
+# Beregn styrke for n = 8
+
+pwr.t.test(n = 8, sig.level = 0.05, d = 1.5/3, type = "one.sample")
+
+# Beregn styrke for n = 40
+
+pwr.t.test(n = 40, sig.level = 0.05, d = 1.5/3, type = "one.sample")
+
+
+```
+
+  Resultatet viser:
+
+  for utvalgsstørrelse (n): 8
+
+  Statistisk styrke (power): 0.232077
+
+  og for utvalgsstørrelse (n): 40
+
+  Statistisk styrke (power): 0.8693981
+
+Med et utvalgsstørrelse på 8 har testen en statistisk styrke på bare omtrent 23.2%. Med en utvalgsstørrelse på 40 øker den statistiske styrken til omtrent 86.9%.
+
+Dette betyr at hvis det faktisk er en reell effekt, er det henholdsvis omtrent 23.2% på n=8 og omtrent 86.9% på n=40 for at testen vil oppdage denne effekten.
+
+Resultatet viser at det er tydelig at utvalgstørrelsen påvirker den statistiske styrken. Dette understreker viktigheten av å ha tilstrekkelig utvalgsstørrelse i studier for å sikre at man kan oppdage reelle effekter når de eksisterer. Lav styrke kan føre til at viktige funn overses, mens høyere styrke gir mer pålitelige resultater[@Spiegelhalter].
+
+*Mange studier uten populasjons effect*
+
+Dette er en kopi fra oppgaveteksten som trengs for å besvare de neste spørsmålene.
+```{r}
+
+population <- rnorm(1000000, mean = 0, sd = 3)
+
+
+# Create data frames to store the model estimates
+results_8 <- data.frame(estimate = rep(NA, 1000), 
+                      se = rep(NA, 1000), 
+                      pval = rep(NA, 1000), 
+                      n = 8)  
+
+results_40 <- data.frame(estimate = rep(NA, 1000), 
+                      se = rep(NA, 1000), 
+                      pval = rep(NA, 1000), 
+                      n = 40)
+
+# A for loop used to sample 1000 studies, each iteration (i) will draw a new sample
+# from the population. 
+
+for(i in 1:1000) {
+  
+  # Draw a sample 
+  samp1 <- data.frame(y = sample(population, 8, replace = FALSE))
+  samp2 <- data.frame(y = sample(population, 40, replace = FALSE))
+
+  # Model the data
+  m1 <- lm(y ~ 1, data = samp1)
+  m2 <- lm(y ~ 1, data = samp2)
+  
+  # Extract values from the models
+  results_8[i, 1] <- coef(summary(m1))[1, 1]
+  results_8[i, 2] <- coef(summary(m1))[1, 2]
+  results_8[i, 3] <- coef(summary(m1))[1, 4]
+
+  results_40[i, 1] <- coef(summary(m2))[1, 1]
+  results_40[i, 2] <- coef(summary(m2))[1, 2]
+  results_40[i, 3] <- coef(summary(m2))[1, 4]
+  
+  
+}
+
+
+# Save the results in a combined data frame
+
+results_null <- bind_rows(results_8, results_40)
+
+```
+
+Ved å bruke den nye datarammen med resultater fra studien med en gjennomsnittlig effect på 0, lag et nytt histogram.
+
+```{r}
+# A two facets histogram can be created with ggplot2
+results_null %>%
+  ggplot(aes(pval)) + 
+  geom_histogram() +
+  facet_wrap(~ n)
+```
+
+## Spørsmål 8
+
+Med et signifikansnivå på 5%, hvor mange studier ville gi deg et 'falskt positivt' resultat hvis du gjorde mange gjentatte studier?
+
+Svar =
+
+```{r}
+
+# Tell antall falske positive resultater
+false_positives <- sum(results_null$pval < 0.05)
+
+# Vis resultatet
+false_positives
+
+```
+
+Falsk positive resultater er resultater som forkastes selv om nullhypotesen er sann. Siden vi har simulert en populasjon der det ikke skal være en reel effekt mellom behandling og kontroll, skal vi i teorien få ut et tall som er i nærheten av det vi setter signifikante på. Ved et signifikansnivå på 5% (0.05), burde tallet være ca. 50 ved 1000 simuleringer. Jeg fikk imidlertid ut 93, som vil si at jeg har 9.3% falske positive. Siden dette er en simulering så har det i dette tilfellet ført til flere tilfeldige variasjoner som resulterer i falske positive. Dette illustrere et viktig poeng i statistikk, selv når det ikke er en reel effekt, kan man se et betydelig antall falske positive resultater. Dette understreker betydningen av replikasjon i forskning[@Spiegelhalter; @Hulley].
+
+Det er også verdt å merke seg at når det ikke er noen reell effekt i populasjonen, vil fordelingen av p-verdier være uniform. Dette betyr at alle p-verdier er like sannsynlige[@Spiegelhalter]. Noe som forklarer hvorfor vi ser en jevn fordeling av p-verdier i histogrammet for null-effekt simuleringen.

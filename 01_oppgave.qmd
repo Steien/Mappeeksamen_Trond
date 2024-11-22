@@ -1,0 +1,422 @@
+---
+title: "Oppgave 1: Reliabilitet og verktøy for reproduserbar vitenskapelig data"
+---
+
+## Introduksjon
+
+Dette er oppgave 1: "Reliabilitet og verktøy for reproduserbar vitenskapelig data" i faget IDR4000-1 24H Kvantitativ metode og statistikk for master i treningsfysiologi. Denne oppgaven var opprinnelig en gruppeoppgave, men jeg har rekonstruert den etter tilbakemelding fra fagansvarlig. Hensikten med denne oppgaven er å undersøke reliabiliteten av VO2max-tester utført i fysiologilaboratoriet.
+
+For at slike tester skal være nyttige i forsknings- og treningssammenheng, er det avgjørende at de er pålitelige og reproduserbare. I denne oppgaven fokuserer vi spesielt på reliabiliteten av to fysiologiske markører: laktatmaksimum (la.max) og respiratorisk utvekslingsforhold (RER.max). Disse markørene gir verdifull innsikt i den fysiologiske responsen under maksimal anstrengelse. Laktat er en indikator på anaerob energiomsetning, vi måler laktatnivåer i blodet etter svært intens trening for å få en indikasjon på hvor stor syreopphopning (acidose) kroppen har opplevd under treningen [@TannerGore]. Mens RER er en måling på mengden karbondioksid (CO2) produsert i forhold til mengden oksygen (O2) som brukes [@Ramos].
+
+## Metode og protokoll
+
+Vi har gjennomført gjentatte VO2max-tester over fire forskjellige dager. Vi har forsøkt å standardisere flere variabler, inkludert treningsnivå og matinntak dagen før testene, for å minimere påvirkningen av konfunderende faktorer. Som både @Halperin, @Hopkins, og @TannerGore påpeker, er det avgjørende å bruke standardiserte protokoller for å oppnå pålitelige resultater i fysiologiske tester.
+
+Vi gjennomførte en VO2maks-test som en trappetrinnstest på ergometersykkel. Testen ble utført over fire forskjellige dager for å vurdere reliabiliteten av målingene. De to første testdagene var påfølgende dager, mens de to siste hadde en hviledag imellom. Før hver test ble utstyret grundig klargjort og kalibrert. Dette inkluderte oppstart av laktatmaskin, klargjøring av munnstykke og slanger, samt kalibrering av oksygenanalysatoren. Gasskalibrering og volumkalibrering ble utført med krav til nøyaktighet, hvor vi aksepterte en feilmargin på maksimalt 2% for gass og 0,2% for volum.
+
+For hver deltaker opprettet vi en ny profil i Vyntus- og Lode-systemene. Deltakerne ble veid i minimalt med klær(trakk fra 300g for de klærne som var igjen), og sykkelen ble innstilt for hver enkelt deltager. Vi forberedte også nødvendig utstyr for laktatmåling.
+
+Selve testen startet med en individuelt tilpasset wattbelastning basert på deltakerens fysiske form og erfaring med sykling. Motstanden økte deretter med 20W hvert minutt inntil utmattelse, eller når tråkkfrekvensen falt under 60 RPM. Vi registrerte målinger av VO2maks hvert 30. sekund gjennom hele testen. Under testen ble deltakerne instruert om å holde en tråkkfrekvens mellom 80-100 RPM. Vi målte kontinuerlig puls og registrerte opplevd anstrengelse med bruk av Borg-skala umiddelbart ved endt test. Ett minutt etter avsluttet test tok vi laktatprøve.
+
+For å sikre standardisering og redusere variasjoner mellom testene, implementerte vi flere tiltak. Deltakerne ble bedt om å opprettholde likt matinntak og koffeinkonsum før hver test. Vi forsøkte også å standardisere trening og søvnmønster i forkant av testene. Dette viste seg utfordrende å kontrollere fullstendig, da vi alle er aktive elever med travel og noe uforutsigbar hverdag.
+
+Hver deltaker hadde samme testleder ved alle fire testene. Dette for å sikre konsistens i verbal instruksjon og oppmuntring, og andre variabler som at kjønnet på tester kan påvirke prestasjonen til testdeltager. Etter hver test ble all data nøye registrert og overført til et standardisert Excel-dokument for videre analyse. Dette inkluderte fysiologiske målinger, subjektive vurderinger og miljøfaktorer som temperatur og luftfuktighet i laboratoriet.
+
+Denne detaljerte protokollen ble utviklet og fulgt for å maksimere reliabiliteten i våre målinger, i tråd med anbefalinger fra @Halperin, @Hopkins, og @TannerGore om standardisering i fysiologiske tester.
+
+## Resultater
+
+Her presenterer jeg resultatene fra testene våre. Jeg starter med en tabell over demografiske variablene i fra de 4 testene. Deretter en tabell over laktat målinger og RER målinger over de samme testene. Deretter reliabilitetsmål og til slutt individuelle forskjeller.
+
+```{r}
+# Last inn nødvendige biblioteker
+library(readxl)
+library(dplyr)
+library(tidyverse)
+
+
+# Definerer variablene som skal brukes
+vars <- c("id", "timepoint", "temperature", "humidity", 
+          "sex", "age", "height", "weight", "w.max", 
+          "vo2.max", "vco2.max", "rer.max", "ve.max", 
+          "bf.max", "hr.max", "la.max", 
+          "borg.max")
+
+# Leser inn dataene fra Excel-filer og kombinerer dem
+dat <- bind_rows(
+read_excel("data/g1.xlsx", sheet = "data_excel", na = "na") %>%
+  select(all_of(vars)) %>%
+  mutate(group = "G1", 
+         id = paste0(group, "_", id)) ,
+
+read_excel("data/g2.xlsx", na = "na") %>%
+   select(all_of(vars)) %>%
+  mutate(group = "G2", 
+         id = paste0(group, "_", id)) ,
+
+read_excel("data/g3.xlsx") %>%
+   select(all_of(vars)) %>%
+  mutate(timepoint = paste0("t", timepoint), 
+         group = "G3", 
+         id = paste0(group, "_", id)) ,
+
+read_excel("data/g4.xlsx") %>%
+   select(all_of(vars)) %>%
+  mutate(group = "G4", 
+         id = paste0(group, "_", id)) )
+
+```
+
+### Demografiske data og deltakelse
+
+```{r}
+library(tidyverse)
+library(gt)
+
+dat %>%
+  select(timepoint, age, height, weight) %>%
+  group_by(timepoint) %>%
+  # Beregn gjennomsnitt og standardavvik for hver variabel
+  summarise(
+    age = paste0(round(mean(age, na.rm = TRUE), 1), " (\u00B1", round(sd(age, na.rm = TRUE), 1), ")"),
+    height = paste0(round(mean(height, na.rm = TRUE), 1), " (\u00B1", round(sd(height, na.rm = TRUE), 1), ")"),
+    weight = paste0(round(mean(weight, na.rm = TRUE), 1), " (\u00B1", round(sd(weight, na.rm = TRUE), 1), ")"),
+    n = n(),
+    .groups = "drop"
+  ) %>%
+  # Legg til en rad for gjennomsnitt
+  bind_rows(
+    dat %>%
+      summarise(
+        timepoint = "Gjennomsnitt",
+        age = paste0(round(mean(age, na.rm = TRUE), 1), " (\u00B1", round(sd(age, na.rm = TRUE), 1), ")"),
+        height = paste0(round(mean(height, na.rm = TRUE), 1), " (\u00B1", round(sd(height, na.rm = TRUE), 1), ")"),
+        weight = paste0(round(mean(weight, na.rm = TRUE), 1), " (\u00B1", round(sd(weight, na.rm = TRUE), 1), ")"),
+        n = n() / 4  # Beregn gjennomsnittlig antall deltakere per test
+      )
+  ) %>%
+  # Formater timepoint og n-verdier
+  mutate(
+    timepoint = ifelse(timepoint != "Gjennomsnitt", 
+                       paste0("t", substr(timepoint, 2, 2), " (n = ", n, ")"), 
+                       paste0(timepoint, " (n = ", round(n, 1), ")"))
+  ) %>%
+  select(-n) %>% # Fjern n-kolonnen
+  # Lag gt-tabell
+  gt() %>%
+  # Sett kolonneoverskrifter
+  cols_label(
+    timepoint = "Tidsperiode",
+    age = "Alder (\u00E5r)",
+    height = "H\u00F8yde (cm)",
+    weight = "Kroppsmasse (kg)"
+  ) %>%
+  # Legg til en horisontal linje før gjennomsnittsraden
+  tab_style(
+    style = cell_borders(
+      sides = "top",
+      color = "black",
+      weight = px(1.5),
+      style = "solid"
+    ),
+    locations = cells_body(
+      columns = everything(),
+      rows = nrow(.)
+    )
+  ) %>%
+  # Juster kolonnebredder
+  cols_width(
+    timepoint ~ px(150),
+    age ~ px(150),
+    height ~ px(150),
+    weight ~ px(150)
+  ) %>%
+  # Juster tekst-justering
+  cols_align(
+    align = "left",
+    columns = everything()
+  ) %>%
+  # Sett overskriften i fet skrift
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels(columns = everything())
+  ) %>%
+  # Legg til overskrift over variabelkolonnene
+  tab_spanner(
+    label = md("**Deltagerkarakteristikker**"),
+    columns = c(age, height, weight)
+  ) %>%
+  # Juster total tabellbredde
+  tab_options(
+    table.width = pct(100)
+  ) %>%
+  # Legg til kildenote
+  tab_source_note(
+    source_note = "Verdier er presentert som gjennomsnitt (\u00B1standardavvik)"
+  ) %>%
+  # Legg til tabelloverskrift
+  tab_header(
+    title = "Deltagerkarakteristikker ved ulike testtidspunkt"
+  )
+
+```
+
+```{r}
+#filtrere ut data slik at det kan refereres til i teksten
+n_t1 <- dat %>% filter(timepoint == "t1") %>% nrow()
+n_t3 <- dat %>% filter(timepoint == "t3") %>% nrow()
+n_t4 <- dat %>% filter(timepoint == "t4") %>% nrow()
+mean_age_t1 <- dat %>% filter(timepoint == "t1") %>% summarise(mean_age = mean(age, na.rm = TRUE)) %>% pull(mean_age)
+mean_age_t4 <- dat %>% filter(timepoint == "t4") %>% summarise(mean_age = mean(age, na.rm = TRUE)) %>% pull(mean_age)
+sd_age_t4 <- dat %>% filter(timepoint == "t4") %>% summarise(sd_age = sd(age, na.rm = TRUE)) %>% pull(sd_age)
+```
+
+### laktat og RER
+
+```{r}
+library(tidyverse)
+library(gt)
+
+dat %>%
+  # Beregn gjennomsnitt, standardavvik og antall for hver tidsperiode
+  group_by(timepoint) %>%
+  summarise(
+    laktat_m = mean(la.max, na.rm = TRUE),
+    laktat_s = sd(la.max, na.rm = TRUE),
+    rer_m = mean(rer.max, na.rm = TRUE),
+    rer_s = sd(rer.max, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) %>%
+  # Legg til en rad for totalt gjennomsnitt
+  bind_rows(
+    summarise(., 
+              timepoint = "Gjennomsnitt", 
+              laktat_m = mean(laktat_m), 
+              laktat_s = mean(laktat_s),
+              rer_m = mean(rer_m),
+              rer_s = mean(rer_s),
+              n = mean(n))
+  ) %>%
+  # Formater verdiene
+  mutate(
+    timepoint = ifelse(timepoint != "Gjennomsnitt", 
+                       paste0("t", substr(timepoint, 2, 2), " (n = ", n, ")"),  
+                       paste0(timepoint, " (n = ", round(n, 1), ")")), 
+                     #paste0(timepoint, " (n = ", round(n, 1), ")"))
+    laktat_col = paste0(round(laktat_m, 2), " (\u00B1", round(laktat_s, 2), ")"),
+    rer_col = paste0(round(rer_m, 2), " (\u00B1", round(rer_s, 2), ")")
+  ) %>%
+  select(timepoint, laktat_col, rer_col) %>%
+  # Lag tabellen med gt
+  gt() %>%
+  # Sett kolonneoverskrifter
+  cols_label(
+    timepoint = "Tidsperiode",
+    laktat_col = "Laktat (mmol/L)",
+    rer_col = "RER"
+  ) %>%
+  # Legg til fotnote
+  tab_source_note(
+    source_note = "Verdier er presentert som gjennomsnitt (\u00B1standardavvik)"
+  ) %>%
+  # Legg til en horisontal linje før gjennomsnittsraden
+  tab_style(
+    style = cell_borders(
+      sides = "top",
+      color = "black",
+      weight = px(1.5),
+      style = "solid"
+    ),
+    locations = cells_body(
+      columns = everything(),
+      rows = nrow(.)
+    )
+  ) %>%
+  # Juster kolonnebredder
+  cols_width(
+    timepoint ~ px(150),
+    laktat_col ~ px(150),
+    rer_col ~ px(150)
+  ) %>%
+  # Juster tekst-justering
+  cols_align(
+    align = "left",
+    columns = everything()
+  ) %>%
+  # Sett overskriften i fet skrift
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels(columns = everything())
+  ) %>%
+  # Legg til overskrift over laktat og RER kolonnene
+  tab_spanner(
+    label = md("**Fysiologiske m\u00E5linger**"),
+    columns = c(laktat_col, rer_col)
+  ) %>%
+  # Juster total tabellbredde
+  tab_options(
+    table.width = pct(100)
+  )
+
+```
+
+Antall deltakere varierte fra `r n_t1` i de to første testene (t1 og t2) til `r n_t3` i t3 og `r n_t4` i t4. Gjennomsnittsalderen for deltakerne økte fra `r round(mean_age_t1, 1)` år (t1 og t2) til `r round(mean_age_t4, 1)` år (t4), med en merkbar økning i standardavvik for alder i t4 (±`r round(sd_age_t4, 1)` år). Gjennomsnittshøyden og -vekten forble relativt stabile over de fire testtidspunktene, med små variasjoner til tross for det ujevne antall deltakere.
+
+#### Laktatmålinger
+
+```{r}
+# Beregn laktat-statistikk
+laktat_stats <- dat %>%
+  group_by(timepoint) %>%
+  summarise(
+    mean_laktat = mean(la.max, na.rm = TRUE),
+    sd_laktat = sd(la.max, na.rm = TRUE)
+  )
+
+# Beregn RER-statistikk
+rer_stats <- dat %>%
+  group_by(timepoint) %>%
+  summarise(
+    mean_rer = mean(rer.max, na.rm = TRUE),
+    sd_rer = sd(rer.max, na.rm = TRUE)
+  )
+
+# Finn min og maks standardavvik for laktat og RER
+laktat_sd_range <- range(laktat_stats$sd_laktat)
+rer_sd_range <- range(rer_stats$sd_rer)
+
+# Lagre verdier for referanse i teksten
+laktat_t1_mean <- laktat_stats$mean_laktat[laktat_stats$timepoint == "t1"]
+laktat_t1_sd <- laktat_stats$sd_laktat[laktat_stats$timepoint == "t1"]
+laktat_t4_mean <- laktat_stats$mean_laktat[laktat_stats$timepoint == "t4"]
+laktat_t4_sd <- laktat_stats$sd_laktat[laktat_stats$timepoint == "t4"]
+
+rer_t1_mean <- rer_stats$mean_rer[rer_stats$timepoint == "t1"]
+rer_t1_sd <- rer_stats$sd_rer[rer_stats$timepoint == "t1"]
+rer_t4_mean <- rer_stats$mean_rer[rer_stats$timepoint == "t4"]
+rer_t4_sd <- rer_stats$sd_rer[rer_stats$timepoint == "t4"]
+
+```
+
+Gjennomsnittlige laktatverdier viste en gradvis økning over testtidspunktene, fra `r round(laktat_t1_mean, 2)` mmol/L (±`r round(laktat_t1_sd, 2)`) i t1 til `r round(laktat_t4_mean, 2)` mmol/L (±`r round(laktat_t4_sd, 2)`) i t4. Standardavviket for laktatmålingene varierte mellom `r round(laktat_sd_range[1], 2)` og `r round(laktat_sd_range[2], 2)` mmol/L over de fire testene, noe som indikerer en viss variabilitet i målingene.
+
+#### RER-målinger
+
+RER-verdiene viste også en svak stigende trend over testtidspunktene, fra `r round(rer_t1_mean, 2)` (±`r round(rer_t1_sd, 2)`) i t1 til `r round(rer_t4_mean, 2)` (±`r round(rer_t4_sd, 2)`) i t4. Standardavviket for RER-målingene var konsistent lavt, og varierte mellom `r round(rer_sd_range[1], 2)` og `r round(rer_sd_range[2], 2)` over de fire testene.
+
+```{r}
+#beregne CV
+
+# For laktat
+cv_laktat <- dat %>%
+  select(id, timepoint, la.max) %>%
+  pivot_wider(names_from = timepoint, values_from = la.max) %>%
+  mutate(diff = t2 - t1) %>% # Change/difference score
+  summarise(m = mean(c(t1, t2), na.rm = TRUE), 
+            s = sd(diff, na.rm = TRUE),
+            te = s / sqrt(2), 
+            cv = 100 * (te/m))
+
+cv_percent_laktat <- round(cv_laktat$cv, 1)
+
+# For RER
+cv_rer <- dat %>%
+  select(id, timepoint, rer.max) %>%
+  pivot_wider(names_from = timepoint, values_from = rer.max) %>%
+  mutate(diff = t2 - t1) %>% # Change/difference score
+  summarise(m = mean(c(t1, t2), na.rm = TRUE), 
+            s = sd(diff, na.rm = TRUE),
+            te = s / sqrt(2), 
+            cv = 100 * (te/m))
+
+cv_percent_rer <- round(cv_rer$cv, 1)
+```
+
+### Reliabilitetsmål
+
+For å vurdere reliabiliteten av metoden, beregnet vi variasjonskoeffisienten (CV) for både laktat og RER basert på de to første testene (t1 og t2):
+
+Laktat = `r cv_percent_laktat`%
+
+RER = `r cv_percent_rer`%
+
+Disse resultatene indikerer at RER-målingene viser betydelig høyere reliabilitet sammenlignet med laktatmålingene. Dette er i tråd med forventningene basert på hva @Ramos sier om RER målinger, som antyder at RER-målinger generelt er mer stabile enn laktatmålinger under repeterte tester. @Hopkins beskriver CV som en nyttig måte å uttrykke typisk feil på, spesielt når feilen har en tendens til å øke med størrelsen på målingen. Selv om @Hopkins ikke spesifiserer eksakte grenser for hva som er akseptabelt, antyder han at lavere CV-verdier generelt indikerer bedre reliabilitet. I vårt tilfelle vil vi si RER-målingene faller innenfor en lavere CV-verdi, noe som tyder på høyere reliabilitet sammenlignet med laktatmålingene.
+
+Andre mål på reliabilitet som kunne vært brukt inkluderer intraclass correlation coefficient (ICC) og limits of agreement, som diskutert av @Hopkins . Disse metodene kunne gitt ytterligere innsikt i konsistensen av målingene over tid og mellom individer.
+
+### Individuelle forskjeller
+
+```{r}
+# Kode for å lage graf til laktat
+
+#| label: fig-laktat
+#| fig-cap: "Individuelle laktatmålinger over fire testtidspunkter"
+
+
+ggplot(data = dat, aes(y = la.max, x = timepoint, group = id)) +
+  geom_point() +
+  geom_line() + 
+  labs(
+    title = "Laktatmålinger over tid",
+    subtitle = "Individuelle verdier for hver deltaker",
+    x = "Testtidspunkt",
+    y = "Laktat maks (mmol/L)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5),
+    axis.title = element_text(face = "bold")
+  )
+```
+
+```{r}
+# graf for RER
+
+#| label: fig-rer
+#| fig-cap: "Individuelle RER-målinger over fire testtidspunkter"
+
+
+ggplot(data = dat, aes(y = rer.max, x = timepoint, group = id)) +
+  geom_point() +
+  geom_line() + 
+  labs(
+    title = "RER-målinger over tid",
+    subtitle = "Individuelle verdier for hver deltaker",
+    x = "Testtidspunkt",
+    y = "RER maks"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5),
+    axis.title = element_text(face = "bold")
+  )
+```
+
+Individuelle variasjoner i laktat- og RER-målinger over de fire testtidspunktene er illustrert i grafene over. Grafene viser at mens noen deltakere hadde relativt stabile verdier over tid, opplevde andre mer markante endringer. For laktatmålinger var det større variabilitet mellom individer og over tid sammenlignet med RER-målingene, som generelt viser hakket mer konsistente mønstre.
+
+## Diskusjon
+
+Denne oppgaven undersøkte reliabiliteten av data fra VO2max-tester vi har utført, med spesielt fokus på laktatmålinger og respiratorisk utvekslingsforhold (RER) over fire testtidspunkter. Resultatene viser varierende grad av reliabilitet for disse fysiologiske markørene
+
+### Reliabilitet av laktatmålinger
+
+Variasjonskoeffisienten (CV) for laktatmålinger på `r cv_percent_laktat`% indikerer en moderat grad av reliabilitet. @Hopkins argumenterer for at CV burde være så lav som mulig og bruker forskjellige eksempler på hvordan CV kan tolkes over og under 5%. Jeg tolker det som at det er ønskelig at CV burde være under 5%. Våre funn for laktat overstiger 5%, noe som tyder på at laktatmålinger kan være mer variable og mindre pålitelige enn ønskelig for presis fysiologisk testing. Dette samsvarer med observasjonen av økende gjennomsnittlige laktatverdier og varierende standardavvik over de fire testene. Den observerte variabiliteten i laktatmålinger kan skyldes flere faktorer.
+
+@Halperin påpeker viktigheten av å kontrollere for konfunderende variabler som kan påvirke fysiologiske målinger. Faktorer som ernæringsstatus, treningsstatus dagen før testing, omgivelsene som antall observatører eller kjønn på observatør samt temperatur, luftfuktighet m.m. Det viste seg å være vanskelig å standardisere alle slike konfunderende faktorer, spesielt trening og søvn for flere i gruppen, og jeg vil tro at de andre gruppene også hadde sine utfordringer. Det kan også hende vi som uerfarne studenter har hatt unøyaktige målinger da blodprøve ble tatt manuelt.
+
+### Reliabilitet av RER-målinger
+
+I motsetning til laktatmålingene viste RER-målingene betydelig høyere reliabilitet, med en CV på `r cv_percent_rer`%. Dette faller godt under 5% som @Hopkins bruker som eksempel på god reliabilitet. Den lave CV-verdien for RER indikerer at denne markøren kan være et mer stabilt og pålitelig mål på metabolsk funksjon under maksimal anstrengelse.
+
+Den høye reliabiliteten observert for RER kan delvis forklares av målingens natur. RER er et direkte mål på forholdet mellom produsert CO2 og konsumert O2, og er mindre påvirket av kortvarige fysiologiske svingninger sammenlignet med laktatkonsentrasjoner i blodet [@Ramos]. I tillegg blir den automatisk målt av en maskin og er ikke utsatt for menneskelige feil som blodtaking for laktat er. Dette gjør RER til en potensielt mer robust markør for vurdering av metabolsk funksjon under høyintensitets utholdenhetstrening.
+
+### Begrensninger
+
+En viktig begrensning i vår oppgave er det synkende antallet deltakere over de fire testtidspunktene, fra 14 i de første to testene til bare 8 i den siste. Dette frafallet kan ha påvirket reliabilitetsestimatene ytterligere, spesielt for de senere testene. CV var bare beregnet ut fra de to første testdagene. Hadde dette vært en reell studie, hadde nok flere av oss blitt ekskludert ut ifra at vi ikke kunne følge protokollen mellom testingen. Selv om vi forsøkte å standardisere testprosedyrene, kan subtile variasjoner i disse faktorene ha bidratt til variabilitet i resultatene. Det var for eksempel andre som brukte de forskjellige laboratoriene parallelt med oss og vi kunne ikke kontrollere trafikken mellom laboratoriene. Dette var en lærerik opplevelse på hvor vanskelig det er å følge protokoller og gjøre det som trengs for å få reliable målinger.
+
+## Konklusjon
+
+Våre funn understreker viktigheten av å vurdere reliabiliteten av fysiologiske markører brukt i idrettsfysiologisk testing. Mens RER viste seg å være en høyst pålitelig markør, i det minste i vårt forsøk, indikerer den moderate reliabiliteten av laktatmålinger i vårt forsøk et behov for forsiktighet ved tolkning av disse verdiene. Ved mer øvelse og mer erfaring fra testerne samt strengere oppfølging av protokoller før testing for de som blir testet, kan nok reliabiliteten til laktat også forbedres.

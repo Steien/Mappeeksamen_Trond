@@ -1,0 +1,395 @@
+---
+title: "Oppgave 2: Regresjonsmodeller, forutsi fra data"
+---
+
+## Introduksjon
+
+Dette er oppgave 2: "Regresjonsmodeller, forutsi fra data" i faget IDR4000-1 24H Kvantitativ metode og statistikk for master i treningsfysiologi. Oppgaven var opprinnelig en gruppeoppgave, men er nå rekonstruert for mappeeksamen, da jeg så vi hadde flere feil i den originale innleveringen.
+
+Hensikten med denne oppgaven er å utforske og anvende ulike statistiske metoder og regresjonsmodeller innen treningsfysiologi og molekylærbiologi. Oppgaven er delt inn i tre hovedseksjoner: laktatterskel-analyse, prediksjon av DNA-fragmentstørrelser, og tolkning av en regresjonstabell basert på et hypertrofi-datasett. Gjennom disse delene vil vi demonstrere vår forståelse av regresjonsanalyse, datavisualisering og statistisk tolkning innen relevante områder for treningsfysiologi. Målet er å vise hvordan disse metodene kan anvendes for å besvare spesifikke forskningsspørsmål og tolke resultater på en meningsfull måte.
+
+## Del 1: Laktatterskel-analyse
+
+### Introduksjon
+
+Laktatterskel er et viktig fysiologisk konsept innen idrettsvitenskap og treningslære, som gir verdifull innsikt i utøveres aerobe kapasitet og treningsintensitet. Under kortvarig supramaksimal trening er det ikke tilstrekkelig oksygen tilgjengelig til å ta imot hydrogenet som produseres under glykolysen, og som et resultat dannes laktat [@TannerGore]. Tidligere antok man at laktatproduksjon var årsaken til at musklene mistet styrke og kraft under anaerob trening. Nå er det generelt forstått at laktat i seg selv ikke er grunnen til at musklene mister styrke og kraft [@TannerGore]. Laktat er også involvert i andre prosesser, som bufferkapasitet, og @TannerGore nevner flere faktorer som påvirker tretthet i musklene. I denne oppgaven vil jeg imidlertid fokusere spesifikt på laktattersklenes rolle i vurderingen av treningsintensitet og utholdenhetsprestasjon.
+
+Et individ med økt evne til å produsere energi ved anaerob glykolyse, og samtidig motstå de negative effektene som fører til utmattelse, vil demonstrere en økt anaerob kapasitet. Derfor er måling av laktatterskel fortsatt en populær metode for å vurdere effekten av trening, programmere treningsintensitet og forutsi prestasjon [@TannerGore].
+
+Denne analysen fokuserer på å beregne og sammenligne to vanlige laktatterskler: 2 mmol/L og 4 mmol/L. @TannerGore påpeker at mens 2 mmol/L og 4 mmol/L er vanlige referansepunkter, kan den faktiske terskelen variere mellom individer, og noen forskere argumenterer for mer individualiserte terskelverdier.
+
+Målet med oppgaven er å undersøke reliabiliteten til disse tersklene i "cyclingstudy" og vurdere deres praktiske anvendelse i treningssammenheng.
+
+### Metode
+
+For å gjennomføre denne analysen ble datasettet "cyclingstudy" fra "exscidata"-pakken benyttet. Dette datasettet inneholder informasjon om laktatkonsentrasjoner ved ulike treningsintensiteter for en gruppe syklister. Analysen ble utført ved hjelp av R og flere pakker, inkludert tidyverse, ggplot2 og knitr.
+
+Dataene ble først bearbeidet og omformet fra bredt til langt format ved hjelp av tidyverse-funksjoner. Et scatterplot ble deretter laget med ggplot2 for å visualisere forholdet mellom treningsintensitet (watt) og laktatkonsentrasjon, med interpolerte kurver for å estimere watt-verdiene som korresponderer med 2 mmol/L og 4 mmol/L laktatkonsentrasjoner.
+
+For å beregne gjennomsnittlige terskelverdier og typisk feil ble det utviklet en funksjon som anvendte interpolasjon. Resultatene ble presentert i tabellform ved hjelp av knitr-pakken. Reliabiliteten mellom de to tersklene ble sammenlignet ved å beregne typisk feil som en prosentandel av gjennomsnittsverdien.
+
+En viktig detalj er at to ulike metoder ble brukt for å beregne laktatterskler. For den visuelle representasjonen i plottet, ble gjennomsnittlige laktatverdier for hver watt-verdi beregnet først, etterfulgt av terskelbestemmelse. Dette gir en god visuell representasjon av den generelle trenden og kan være mindre påvirket av ekstreme individuelle verdier.
+
+For den statistiske analysen presentert i tabellene, ble individuelle terskelverdier beregnet først, etterfulgt av gjennomsnittsberegning. Dette tar bedre hensyn til individuelle forskjeller og gir sannsynligvis en mer nøyaktig representasjon av den gjennomsnittlige individuelle terskelen. Denne forskjellen i tilnærming gir litt ulike resultater og belyser viktigheten av å vurdere både gruppetrender og individuelle variasjoner i laktatterskelanalyser.
+
+### Resultater
+
+```{r}
+library(exscidata)
+library(tidyverse)
+library(ggplot2)
+
+data(cyclingstudy)
+
+# Omform datasettet
+cyclingstudy_long <- cyclingstudy %>%
+  pivot_longer(
+    cols = starts_with("lac."),
+    names_to = "watt",
+    values_to = "lactate",
+    names_prefix = "lac."
+  ) %>%
+  mutate(watt = as.numeric(watt)) %>%
+  filter(!is.na(watt), !is.na(lactate))
+
+# Beregn gjennomsnittlige laktatverdier for hver watt-verdi
+lactate_means <- cyclingstudy_long %>%
+  group_by(watt) %>%
+  summarise(mean_lactate = mean(lactate, na.rm = TRUE))
+
+# Finn watt-verdier for 2 og 4 mmol/L terskler
+interp_func <- approxfun(lactate_means$mean_lactate, lactate_means$watt)
+watt_2mmol <- interp_func(2)
+watt_4mmol <- interp_func(4)
+
+# Lag plottet
+ggplot(cyclingstudy_long, aes(x = watt, y = lactate)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "loess", se = FALSE, color = "blue") +
+  geom_hline(yintercept = c(2, 4), linetype = "dashed", color = "red") +
+  geom_vline(xintercept = c(watt_2mmol, watt_4mmol), linetype = "dotted", color = "darkgreen") +
+  geom_point(data = data.frame(watt = c(watt_2mmol, watt_4mmol), lactate = c(2, 4)), 
+             color = "red", size = 4) +
+  annotate("text", x = watt_2mmol, y = 2, label = paste("2 mmol/L:", round(watt_2mmol, 1), "W"), 
+           vjust = -1, color = "red") +
+  annotate("text", x = watt_4mmol, y = 4, label = paste("4 mmol/L:", round(watt_4mmol, 1), "W"), 
+           vjust = -1, color = "red") +
+  labs(title = "Laktatterskel: 2 mmol/L og 4 mmol/L",
+       x = "Treningsintensitet (Watt)",
+       y = "Laktatkonsentrasjon (mmol/L)") +
+  theme_minimal()
+
+```
+
+Plottet ovenfor illustrerer forholdet mellom treningsintensitet og laktatkonsentrasjon for utvalget i "cyclingstudy". De grå punktene representerer individuelle målinger, mens den blå kurven viser den generelle trenden i dataene. De røde horisontale stiplede linjene markerer 2 mmol/L og 4 mmol/L laktattersklene. De grønne vertikale prikkede linjene indikerer de estimerte watt-verdiene for disse tersklene, med røde punkter som markerer nøyaktig hvor tersklene krysser den blå kurven. Tilhørende rød tekst viser de spesifikke watt-verdiene for hver terskel.
+
+Som vi ser krysser gruppegjennomsnittet i dette utvalget 2 mmol/L på 221.9 watt og 4 mmol/L på 295.2 watt, med en differanse på 73.3 watt mellom tersklene. Det er viktig å merke seg at disse verdiene er basert på gruppegjennomsnittet og kan avvike fra de individuelle terskelverdiene presentert i tabellene. Den blå kurven viser en eksponentiell trend opp til omtrent 300 watt, noe som er typisk for laktatakkumulering under økende belastning[@TannerGore]. Interessant nok flater kurven ut og begynner å synke litt etter ca 350 watt, noe som kan skyldes at vi ser færre målinger ved høyere intensiteter og høyere påvirkning av individuelle forskjeller. Den betydelige spredningen i de individuelle målingene (grå punkter) indikerer stor variasjon mellom deltakerne i deres laktatrespons til økende treningsintensitet. Spredningen av datapunktene ser ut til å være mindre ved lavere intensiteter, noe som kan ha implikasjoner for reliabiliteten av målinger ved ulike laktatnivåer. Dette understreker viktigheten av individuell tilpasning i treningsprogrammer, selv om de gjennomsnittlige terskelverdiene gir en nyttig generell referanse for treningsintensiteter."
+
+For å kvantifisere disse tersklene og vurdere deres reliabilitet, ble gjennomsnittlige terskelverdier, standardavvik, og typisk feil beregnet for både 2 mmol/L og 4 mmol/L tersklene. Resultatene er presentert i følgende tabeller:
+
+```{r}
+# Last inn nødvendige biblioteker
+library(exscidata)
+library(tidyverse)
+library(knitr)
+
+# Last inn datasettet
+data(cyclingstudy)
+
+# Funksjon for å finne gjennomsnittlig terskelverdi
+find_avg_threshold <- function(data, threshold) {
+  data %>%
+    pivot_longer(cols = starts_with("lac."), 
+                 names_to = "watt", 
+                 values_to = "lactate", 
+                 names_prefix = "lac.") %>%
+    mutate(watt = as.numeric(watt)) %>%
+    group_by(subject) %>%
+    summarise(threshold_watt = approx(lactate, watt, xout = threshold)$y) %>%
+    summarise(avg_threshold = mean(threshold_watt, na.rm = TRUE),
+              sd_threshold = sd(threshold_watt, na.rm = TRUE)) %>%
+    mutate(typical_error = sd_threshold / sqrt(2),
+           typical_error_percent = (typical_error / avg_threshold) * 100)
+}
+
+# Beregn gjennomsnittlige terskelverdier og typisk feil
+threshold_2mmol <- find_avg_threshold(cyclingstudy, 2)
+threshold_4mmol <- find_avg_threshold(cyclingstudy, 4)
+
+# Funksjon for å formatere og presentere resultatene
+present_results <- function(threshold_data, threshold_value) {
+  threshold_data %>%
+    mutate(across(where(is.numeric), ~round(., 1))) %>%
+    transmute(
+      `Terskel` = paste(threshold_value, "mmol/L"),
+      `Gjennomsnittlig Watt` = avg_threshold,
+      `Standardavvik` = sd_threshold,
+      `Typisk Feil` = typical_error,
+      `Typisk Feil (%)` = typical_error_percent
+    ) %>%
+    kable(format = "pipe", caption = "Laktatterskel Analyse")
+}
+
+# Presenter resultatene for 2 mmol/L terskel
+present_results(threshold_2mmol, 2)
+
+# Presenter resultatene for 4 mmol/L terskel
+present_results(threshold_4mmol, 4)
+
+```
+
+Disse tabellene gir en detaljert oversikt over de beregnede verdiene for hver terskel. For 2 mmol/L-terskelen ser vi en gjennomsnittlig watt-verdi på 225,4 W, med et standardavvik på 40,5 W. Den typiske feilen, som er et mål på målevariasjon, er 28,7 W, noe som utgjør 12,7% av gjennomsnittsverdien. For 4 mmol/L-terskelen er den gjennomsnittlige watt-verdien høyere, som forventet, på 275,6 W, med et lavere standardavvik på 30,8 W. Den typiske feilen for denne terskelen er 21,8 W, som utgjør 7,9% av gjennomsnittsverdien.
+
+Denne sammenligningen viser tydelig at 4 mmol/L-terskelen har en lavere typisk feil i prosent (7,9%) sammenlignet med 2 mmol/L-terskelen (12,7%), noe som indikerer en høyere reliabilitet for 4 mmol/L-terskelen.
+
+### Diskusjon
+
+Resultatene fra denne analysen gir flere interessante innsikter. For det første observerer vi at 4 mmol/L-terskelen oppstår ved en høyere treningsintensitet enn 2 mmol/L-terskelen, noe som er i tråd med vår forståelse av laktatakkumulering under økende fysisk belastning [@TannerGore].
+
+Basert på gruppegjennomsnittet vist i plottet, ser vi at 2 mmol/L-terskelen oppstår ved 221.9 watt, mens 4 mmol/L-terskelen oppstår ved 295.2 watt. Imidlertid, når vi ser på de individuelle beregningene presentert i tabellene, finner vi litt forskjellige verdier. Tabellene viser at basert på individuelle beregninger, er gjennomsnittlig watt-verdi for 2 mmol/L-terskelen 225.4 watt (standardavvik 40.5 watt), mens for 4 mmol/L-terskelen er den 275.6 watt (standardavvik 30.8 watt). Vi ser det er en forskjell men den generelle trenden er lik for begge utregningene.
+
+Et bemerkelsesverdig funn er forskjellen i reliabilitet mellom de to tersklene. Til tross for at spredningen av datapunktene ser ut til å være mindre ved lavere intensiteter i plottet, viser 4 mmol/L-terskelen seg å være betydelig mer reliabel i dette datasettet, med en typisk feil på 7,9% sammenlignet med 12,7% for 2 mmol/L-terskelen. Denne tilsynelatende motsetningen kan skyldes at forholdet mellom treningsintensitet og laktatproduksjon blir mer lineært og forutsigbart ved høyere intensiteter, selv om den absolutte spredningen øker. Individuelle forskjeller i laktatrespons kan også spille en større rolle nær 4 mmol/L-terskelen, da det er færre observasjoner ved høyere intensitet.
+
+### Konklusjon
+
+Denne analysen har demonstrert at både 2 mmol/L og 4 mmol/L laktatterskler kan beregnes og anvendes for å vurdere treningsintensitet og aerob kapasitet. Resultatene viser at 4 mmol/L-terskelen har en høyere reliabilitet i dette utvalget, noe som gjør den til et potensielt mer robust verktøy for treningsovervåkning og prestasjonsvurdering. Likevel bør valget av terskel tilpasses individuelle behov og spesifikke treningsmål. Denne type analyse bidrar til en mer presis og individualisert tilnærming til treningsplanlegging og prestasjonsforbedring innen utholdenhetsidretter, og viser viktigheten av å vurdere ulike fysiologiske markører i treningssammenheng.
+
+## Del 2: Forutsi størrelser på DNA-fragmenter.
+
+### Innledning
+
+I denne oppgaven ble jeg bedt om å analysere størrelsen på DNA-fragmenter som ble amplifisert ved hjelp av PCR (eller RNA med qPCR, jeg valgte å analysere DNA). For å gjøre dette fulgte jeg en protokoll vi fikk tildelt @Trainome som inkluderte bruk av agarosegelelektroforese for å visualisere DNA-fragmentene og ImageJ for å måle migrasjonsavstandene til fragmentene. Deretter brukte jeg R for å lage en kalibreringsmodell basert på en DNA-stige og beregne størrelsene på de ukjente DNA-fragmentene fra prøvene mine.
+
+### Metode
+
+jeg brukte følgende bilde som viser reultatene for gruppe 3 og 4 fra oppgaven "DNA ekstrasjon og analyse". Vi skulle se hvilken genotype vi hadde av ACTN3. Som er det genet vi ofte forbinder med raske og trege muskelfibere, eller "Sprint" og "utholdenhet". Ifølge protokollen vi fulgte i fra forsøket på labben skulle "A R/R genotype produces two bands at 690 and 413 bp. A X/X genotype produces two bands at 690 and 318 bp.". Vi kan allerede se utifra bildet at alle prøvene som viser noe, bare viser 1 bånd hver og at sannsynligheten er stor for at noe har gått galt i forsøket.
+
+```{r}
+knitr::include_graphics("ressurser/oppgave2/bilde_DNA.jpg")
+```
+
+Jeg burde fortsatt kunne få ut hvilket basepar de bandene som er der ligger på, og de 7 første prøvene burde gi likt svar og det siste burde gi et annet svar. Jeg burde da kunne finne ut hvilket band som er vist på bildet. Ligger de første 7 i nærheten av 690 må jeg se om det andre ligger nært 413 eller 318. Ligger de første på 413 eller 318 vet jeg at det som er for seg selv sannsynligvis er det motsatte.
+
+Jeg startet med å åpne bildet av gelen i fiji med ImageJ, hvor jeg inverterte bildet og roterte det slik at brønnene var plassert til venstre. Deretter markerte jeg stigen i midten (brønn 1) ved hjelp av rektangelverktøyet og registrerte intensitetstopper for hvert bånd i stigen. Jeg gjorde det samme for prøvene, der fem prøver foran stigen (brønn 2-5) og tre bak stigen (brønn 6-8) hadde klare bånd. Brønnene er nummerert etter de som gir synlige resultater, ikke kronologisk da flere prøver ikke ga resultat. På grunn utfordringer i håndtering av bildet endte nr rekke følgen å bli fra toppen til bunnen: 8-5-4-3-2-1(stige)-6-7-9. Dette burde ikke spille noen rolle da prøver fra brønn 2-8 skal være like og bare en prøven som er ifra brønn 9 som er ulik resten. Dette er bildet som viser indelingen.
+
+```{r}
+knitr::include_graphics("ressurser/oppgave2/bilde_DNA_markert.jpg")
+```
+
+Resultatet ga dette bildet, hvor hver forhøyning representere piksel intensiteten i bildet fra markeringene. Deretter fikk jeg ut følgende bilde.
+
+```{r}
+knitr::include_graphics("ressurser/oppgave2/Plots_DNA.jpg")
+```
+
+Jeg markerte hver forhøyning i bildet med unntak av det jeg tror er støy, Inkludert den store forhøyningen på bilde 4 fra toppen som ser ut som en refleksjon fra da bildet ble tatt. Deretter fortsettet jeg i R.
+
+### Resultat og analyse i R
+
+```{r}
+# Last inn dataene dine
+data <- read.csv("data/oppgave2/resultater_DNA.csv")
+```
+
+Etter at jeg hadde samlet inn data fra ImageJ, eksporterte jeg disse til et regneark og importerte dem til RStudio for videre analyse. Deretter definerte jeg DNA-stigen basert på guiden vi fikk utdelt fra protokollen som var:
+
+```{r}
+#| code-fold: false
+
+ladder <- data.frame(dist = c(29, 43.5, 60.5, 80.5, 106.5, 141.5, 181.5, 243.5, 281.5, 328.5, 390.5, 465.5, 580.5), 
+                     mw = c(1000, 900, 800, 700, 600, 500, 400, 300, 250, 200, 150, 100, 50))
+```
+
+Jeg laget deretter en kalibreringsmodell basert på log-transformerte molekylvekter og migrasjonsavstander fra stigen.
+
+```{r}
+cal <- lm(log(mw) ~ dist, data = ladder)
+summary(cal)
+```
+
+Så estimerte jeg størrelsene på DNA-fragmentene fra prøvene. I protokollen står det "Create a spreadsheet with the data collected in ImageJ, alternatively, input your data in R directly (as below). The x-values from ImageJ are the values of interest."
+
+Jeg har da endret koden fra protokollen
+
+```{r}
+#| echo: true
+
+unknown <- data.frame(dist = c(470.5,   391.5,  528.5,
+                               421.5,   507.5))
+```
+
+til
+
+```{r}
+#| echo: true
+
+# Definer ukjente prøver
+unknown <- data.frame(dist = data$X)
+
+# Estimer molekylvekter
+preds <- exp(predict(cal, newdata = unknown))
+
+# Lag resultat-dataframe
+resultater <- data.frame(Prove = data$X.1, Avstand = data$X, Estimert_Storrelse = round(preds))
+
+```
+
+Deretter laget jeg en tabell som skal gi ut informasjon om prøvene.
+
+```{r}
+library(knitr)
+library(kableExtra)
+
+unknown <- data.frame(dist = data$X)
+preds <- exp(predict(cal, newdata = unknown))
+resultater <- data.frame(Prove = data$X.1, Avstand = unknown$dist, Estimert_Storrelse = round(preds))
+
+# presenter dette i en penere tabell
+resultater %>%
+  kable(caption = "Estimerte DNA-fragmentstorrelser basert pa migrasjonsavstander",
+        col.names = c("Prove", "Avstand", "Estimert storrelse (bp)"),
+        align = c('c', 'c', 'c'),
+        digits = c(0, 1, 0)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                full_width = FALSE) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, width = "5em") %>%
+  column_spec(2, width = "8em") %>%
+  column_spec(3, width = "10em")
+```
+
+Jeg laget også et plott som visualisere hva stigen gjør:
+
+```{r}
+# Plott kalibreringskurve
+plot(ladder$dist, log(ladder$mw), main="Kalibreringskurve", xlab="Avstand", ylab="Log(Molekylvekt)")
+abline(cal, col="red")
+```
+
+Dette plottet viser kalibreringskurven basert på DNA-stigen vi brukte i eksperimentet. X-aksen representerer migrasjonsavstanden målt i ImageJ, mens Y-aksen viser den naturlige logaritmen av molekylvekten (i basepar). Punktene representerer dataene fra DNA-stigen, mens den røde linjen er den lineære regresjonsmodellen som best passer disse dataene.
+
+Kurven illustrerer det inverse forholdet mellom migrasjonsavstand og molekylvekt: større DNA-fragmenter (høyere molekylvekt) migrerer kortere avstander i gelen. Den lineære trenden i dette log-transformerte plottet bekrefter at vi kan bruke denne modellen til å estimere størrelsen på ukjente DNA-fragmenter basert på deres migrasjonsavstander. Jo tettere punktene ligger til den røde linjen, desto mer pålitelig er vår kalibreringsmodell.
+
+### Diskusjon
+
+Jeg er faktisk ikke sikker på resultatene. Jeg har forsøkt å finne svar fra ulike kilder, men kan ikke finne en god måte å lese resultatene på. Såvidt jeg har forstått har jeg 8 målinger av prøver + 1 stige. Mens "Estimerte DNA fragmentstørrelsen basert på migrasjonsavstander" gir resultat fra 22 prøver. I tillegg vil jeg forvente at 7 av prøvene som kommer etter hverandre burde ha like, eller veldig nære basepar. Mot slutten av tabellen ser jeg noen likheter jeg kanskje kan tenke meg til er det jeg ser etter. Jeg kan tenke meg flere grunner til at tabellen ikke vises riktig.
+
+Den ene grunnen er at koden jeg brukte til stigen ikke er den samme som den stigen vi brukte i forsøket. Dette kan da ha gjort at resultatet ikke er representativt av hva jeg faktisk forsøker å fremlegge.
+
+Når jeg analyserte dataene, brukte jeg X-verdiene fra datasettet som migrasjonsavstander, basert på protokollens anbefaling om at x-verdiene er av interesse. Dette resulterte i 22 datapunkter, som er mer enn de 8 prøvene pluss 1 stige jeg opprinnelig observerte på gelen. De estimerte DNA-fragmentstørrelsene viser en gradvis nedgang fra 1058 bp til 37 bp for de første 14 prøvene, etterfulgt av en gruppe verdier mellom 127 bp og 184 bp for de siste 8 prøvene. Denne fordelingen stemmer ikke overens med forventningen om å se to distinkte bånd per prøve ved enten 690 og 413 bp eller 690 og 318 bp. Det er mulig at X-verdiene i datasettet representerer noe annet enn de faktiske migrasjonsavstandene, eller at kalibreringen av stigen ikke er optimal for våre spesifikke prøver. Jeg ser imidlertid en uniformitet i de 8 siste prøvene. Den siste har 127 bp og de 7 foregående har mellom 171 og 184 bp.
+
+Jeg har ikke nok kunnskap om denne koden og koding generelt, det er en mulighet til at det er noen feil som har kommet med fra min side. Det var ikke spesefikt skrevet i protokollen hvordan data settet skulle leses, annet enn at det er x aksen som er av interesse så det er høy sansynlig at følgende kode ikke er den riktige for å lese datasettet:
+
+```{r}
+#| code-fold: false
+#| eval: false
+# Definer ukjente prøver
+unknown <- data.frame(dist = data$X)
+
+# Estimer molekylvekter
+preds <- exp(predict(cal, newdata = unknown))
+
+# Lag resultat-dataframe
+resultater <- data.frame(Prove = data$X.1, Avstand = data$X, Estimert_Storrelse = round(preds))
+
+```
+
+Jeg tror dette kanskje er det med høyest sannsynlighet er grunnen til at jeg ikke får riktig data ut.
+
+Jeg jobbet ut ifra et ufullstendig bilde med bare ett bånd per prøve da jeg skulle hatt to bånd per prøve. Dette understreker at bildet jeg jobbet ut ifra sannsynligvis har hatt feil ved seg i forsøket, men jeg antar jeg skulle fortsatt ha klart å se like bånd.
+
+### Resultater
+
+Jeg har forsøkt å analysere DNA-fragmenter fra ACTN3-genet for å bestemme genotypen relatert til muskelfiber-type. Basert på protokollen fra biologilabben skulle vi forvente å se to bånd, enten ved 690 og 413 bp for R/R-genotypen, eller ved 690 og 318 bp for X/X-genotypen. Jeg hadde bare et bånd å jobbe ut ifra og mine resultater avviker betydelig fra disse forventningene, noe som tyder på at det har oppstått flere utfordringer i løpet av eksperimentet og analysen.
+
+De estimerte DNA-fragmentstørrelsene vi observerte varierte fra 1058 bp til 37 bp, med en gradvis nedgang for de første 14 prøvene og en gruppe av verdier mellom 127 bp og 184 bp for de siste 8 prøvene. Ingen av disse verdiene samsvarer nøyaktig med de forventede båndstørrelsene på 690, 413, eller 318 bp for ACTN3-genotypene. Selv om resultatene viser en logisk trend med avtagende fragmentstørrelser ved økende migrasjonsavstander, er verdiene spredt over et større område enn forventet og inkluderer ikke de spesifikke størrelsene vi lette etter. Dette tyder på at det kan være problemer med enten kalibreringen, datainnsamlingen, eller selve PCR-amplifiseringen.
+
+Det er også verdt å merke seg at jeg fikk resultater for 22 prøver, selv om jeg kun analyserte 8 brønner (9 inkludert stigen). Dette tyder på at det kan ha oppstått feil i dataregistreringen eller analysen.
+
+Det er imidlertid et sted jeg ser en mulig forklaring i resultatet. Den siste prøven har 127 bp og de 7 foregående har mellom 171 og 184 bp som er relativt likt. Det er ikke umulig at de første 14 "prøvene" er stigen, de neste 7 prøvene er de første 7 prøvene som skal i prinsippet være like(men kan ha blitt ulike på grunn av unøyaktighet fra min side) og det siste prøven er den siste prøven som var noe anderledes. Dette er bare ren spekulasjon fra min side, men det virker for meg til å være den mest logiske konklusjonen. Hvis jeg går ut med denne enorme antagelsen i bakgrunn, ville jeg sagt at den siste prøven er X/X siden den har et bånd som skal være på 318 bp som er det laveste, og den har det laveste av de siste 8 prøvene. Jeg vil ikke konkludere med dette. for alt jeg vet har koden snudd skalaen, og jeg gjør mange antagelser.
+
+Gitt disse utfordringene og de avvikende resultatene, kan jeg ikke trekke pålitelige konklusjoner om ACTN3-genotypene i våre prøver. Det jeg kan si er at det kan hende, ut ifra visuell utforsking av det originale bildet er at det er 7 personer som kan ha samme genotype og en som har en annen. Dette kan også være feil da vi bare ser et bånd.
+
+Dette forsøket understreker viktigheten av nøyaktighet og presisjon i alle trinn av molekylærbiologiske eksperimenter, fra prøvepreparering til dataanalyse. Selv om jeg ikke kunne bestemme ACTN3-genotypene som planlagt, har denne erfaringen gitt verdifull innsikt i flere potensielle fallgruver og områder for forbedring i lignende fremtidige studier. Hadde jeg hatt tid ville jeg gjennomgått koden med en faglærer og forsøkt på nytt.
+
+## Del 3: Tolkning av regresjonstabell
+
+### Introduksjon
+
+I denne delen av oppgaven skulle vi finne et forskningspørsmål basert på "hypertrophy" datasettet i "exscidata" pakken i Rstudio og lage en lineær regresjonsanalyse som skal tolkes.
+
+### Forskningspørsmål
+
+basert på data fra "hypertrophy" har jeg formulert følgende spørsmål.
+
+Er det en lineær sammenheng mellom muskeltykkelse (VL_T1) og styrke i knebøy (SQUAT_3RM)?"
+
+Muskeltykkelsen målt er da vastus lateralis (VL_T1) og styrken er den maksimale vekten løftet i knebøy over 3 repetisjoner(SQUAT_3RM).
+
+### Metode
+
+For å svare på dette spørsmålet har vi utført en lineær regresjonsanalyse. Resultatene fra analysen er presentert i tabellen nedenfor:
+
+```{r}
+library(exscidata)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+
+# Utfør lineær   regresjon
+model <- lm(SQUAT_3RM ~ VL_T1, data = hypertrophy)
+
+# Lag en dataframe med regresjonsresultater og endre radnavnene direkte
+coef_table <- data.frame(
+  Variabel = c("Skj\u00e6ringspunkt", "Muskeltykkelse (VL)"),
+  Estimat = round(coef(model), 3),
+  Standardfeil = round(sqrt(diag(vcov(model))), 3),
+  `t-verdi` = round(coef(model) / sqrt(diag(vcov(model))), 3),
+  `p-verdi` = round(summary(model)$coefficients[,4], 3)
+)
+
+# Fjern radnavn
+rownames(coef_table) <- NULL
+
+# Lag regresjonstabell med knitr og kableExtra
+kable(coef_table, caption = "Regresjonsanalyse: Muskeltykkelse og Kneb\u00f8ystyrke") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+
+```
+
+### Tolkning av resultatene (med fokus på standardfeil, t-verdi og p-verdi)
+
+Estimatet representerer den beregnede verdien basert på vårt utvalg, som er en del av den større populasjonen vi ønsker å undersøke. Målet er at dette estimatet skal være en god tilnærming til den sanne verdien i hele populasjonen. Jo større og mer representativt utvalget er, desto mer nøyaktig blir estimatet, forutsatt at utvalgsmetoden er god[@Spiegelhalter]. Estimatet for muskeltykkelse er 17,115, som betyr at for hver enhets økning i muskeltykkelse, forventer vi en økning på omtrent 17,115 enheter i knebøystyrke, gitt at alle andre faktorer holdes konstante.
+
+Standardfeilen for muskeltykkelse (VL) er 6,300. Dette tallet representerer usikkerheten i estimatet vårt. Standardfeil er et statistisk mål som forteller oss hvor presist vårt estimat av populasjonsgjennomsnittet er. En lavere standardfeil indikerer et mer presist estimat. I dette tilfellet forteller standardfeilen oss hvor mye estimatet vårt kan variere hvis vi gjentok studien med nye utvalg. Hvis antall observasjoner øker vil standardfeilen bli mindre[@Aalen].
+
+t-verdien for muskeltykkelse (VL) er 2,717. Denne verdien beregnes ved å dele estimatet (koeffisienten) på standardfeilen. t-verdien hjelper oss å vurdere om effekten av muskeltykkelse på knebøystyrke er statistisk signifikant. Jo større absoluttverdien av t-verdien er, desto sterkere bevis har vi mot nullhypotesen om at det ikke er noen sammenheng mellom variablene muskeltykkelse og knebøystyrke [@Spiegelhalter].
+
+p-verdien er et sentralt konsept i statistisk hypotesetesting. p-verdien for muskeltykkelse (VL) er 0,011. Dette tallet representerer sannsynligheten for å observere en t-verdi like ekstrem som, eller mer ekstrem enn, den vi faktisk observerte, gitt at nullhypotesen er sann. En p-verdi mindre enn det vanlige signifikansnivået på 0,05 indikerer at vi har statistisk signifikante bevis mot nullhypotesen[@Hulley].
+
+I vårt tilfelle er p-verdien  mindre enn 0,05 som er et vanlig signifikansnivå. Det er viktig å merke seg at p-verdien ikke direkte forteller oss sannsynligheten for at nullhypotesen er sann eller falsk. I stedet gir den oss informasjon om hvor godt dataene våre stemmer overens med nullhypotesen. En lav p-verdi, som i vårt tilfelle, antyder at dataene våre er lite sannsynlige under nullhypotesen, noe som fører til at vi forkaster nullhypotesen til fordel for den alternative hypotesen om en sammenheng mellom variablene (muskeltykkelse og styrke) [@Hulley].
+
+For å gi et visuelt bilde kan vi legge det inn i et spredningsplott:
+
+```{r}
+library(ggplot2)
+
+# Lag spredningsplottet
+ggplot(hypertrophy, aes(x = VL_T1, y = SQUAT_3RM)) +
+  geom_point() +  # Legger til punktene
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +  # Legger til regresjonslinjen med konfidensintervall
+  labs(title = "Sammenheng mellom muskeltykkelse og knebøystyrke",
+       x = "Muskeltykkelse (VL_T1) i cm",
+       y = "Knebøystyrke (SQUAT_3RM) i kg") +
+  theme_minimal()
+```
+
+Spredningsplottet ovenfor visualiserer sammenhengen mellom muskeltykkelse (VL_T1) og knebøystyrke (SQUAT_3RM) som vi har analysert i regresjonsmodellen.
+
+Fra plottet kan vi observere den positive lineære trenden som regresjonsanalysen indikerte. Hver prikk representerer en deltaker i studien, og den blå linjen viser den estimerte lineære sammenhengen. Det skyggelagte området rundt linjen representerer 95% konfidensintervallet, som gir oss en visuell indikasjon på usikkerheten i estimatet.
+
+Dette plottet støtter vår tolkning av regresjonskoeffisienten. Vi kan se at når muskeltykkelsen øker, er det en generell tendens til at knebøystyrken også øker. Samtidig illustrerer spredningen av punktene rundt linjen at det er individuell variasjon, noe som understreker viktigheten av å vurdere både estimatet og standardfeilen i vår analyse.
+
+### Konklusjon
+
+Basert på analysen kan vi konkludere med at det finnes en signifikant lineær sammenheng mellom muskeltykkelse og styrke i knebøy i dette datasettet. Resultatene tyder på at økt muskeltykkelse er assosiert med høyere styrke i knebøy, noe som kan ha implikasjoner for treningsprogrammer rettet mot styrkeutvikling.
