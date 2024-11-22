@@ -1,8 +1,3 @@
----
-editor: 
-  markdown: 
-    wrap: sentence
----
 
 # Mappeeksamen i IDR4000 Kvantitativ metode og statistikk
 
